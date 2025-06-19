@@ -1,0 +1,13 @@
+# test/fixtures/questions.yml
+one:
+  text: "¿Cuál es el tratamiento de primera línea para la hipertensión?"
+  clinical_case: one
+
+two:
+  text: "¿Qué síntoma es más común en la diabetes tipo 2?"
+  clinical_case: one
+
+three:
+  text: "¿Cuál es la dosis recomendada de paracetamol en adultos?"
+  clinical_case: two
+  # Esta pregunta no tiene caso clínico (standalone)

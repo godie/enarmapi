@@ -1,0 +1,30 @@
+# test/fixtures/answers.yml
+one:
+  description: "IECA o ARA II"
+  question: one
+  is_correct: true
+
+two:
+  description: "Betabloqueadores"
+  question: one
+  is_correct: false
+
+three:
+  description: "Poliuria"
+  question: two
+  is_correct: true
+
+four:
+  description: "Pérdida de peso"
+  question: two
+  is_correct: false
+
+five:
+  description: "500-1000mg cada 4-6 horas"
+  question: three
+  is_correct: true
+
+six:
+  description: "2000mg cada 8 horas"
+  question: three
+  is_correct: false

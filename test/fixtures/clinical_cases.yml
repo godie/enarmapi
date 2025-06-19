@@ -1,0 +1,10 @@
+# test/fixtures/clinical_cases.yml
+one:
+  name: "Paciente con dolor torácico"
+  description: "Hombre de 65 años con dolor torácico opresivo"
+  category: one
+
+two:
+  name: "Paciente con cefalea"
+  description: "Mujer de 35 años con cefalea recurrente"
+  category: two

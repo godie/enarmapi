@@ -1,0 +1,22 @@
+services:
+  admin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin@enarmapi.com"
+      PGADMIN_DEFAULT_PASSWORD: "test"
+      SCRIPT_NAME: "/pgadmin4"
+    ports:
+      - "8080:80"
+
+  database:
+    image: postgres:14
+    volumes:
+      - db_pg_data:/var/lib/postgresql/data
+      #- ./init.sql:/docker-entrypoint-init.d/init.sql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: postgres
+volumes:
+  db_pg_data: {}
