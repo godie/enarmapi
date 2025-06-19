@@ -27,3 +27,10 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+# Include custom test helpers
+Dir[Rails.root.join('test/support/**/*.rb')].each { |f| require f }
+
+class ActionDispatch::IntegrationTest
+  include AuthenticationHelpers
+end
