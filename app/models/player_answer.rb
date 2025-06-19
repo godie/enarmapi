@@ -12,14 +12,14 @@ class PlayerAnswer < ApplicationRecord
 
   # Callbacks
   before_create :set_correctness
-  #after_create :update_player_stats
-  
+  # after_create :update_player_stats
+
   # Scopes
   scope :correct, -> { where(is_correct: true) }
   scope :incorrect, -> { where(is_correct: false) }
   scope :recent, -> { order(created_at: :desc) }
   scope :by_question, ->(question_id) { where(question_id: question_id) }
-  
+
 
   private
 

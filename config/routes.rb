@@ -12,8 +12,8 @@ Rails.application.routes.draw do
     resources :questions
   end
 
-  post 'player_answers', to: 'player_answers#create'
-  get 'player_answers', to: 'player_answers#index'
+  post "player_answers", to: "player_answers#create"
+  get "player_answers", to: "player_answers#index"
 
   resources :exams
 

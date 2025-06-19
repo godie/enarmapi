@@ -8,7 +8,7 @@ class Player < ApplicationRecord
   # Validaciones
   validates :facebook_id, presence: true, uniqueness: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
-  
+
   # Métodos de estadísticas
   def stats
     {
@@ -20,29 +20,29 @@ class Player < ApplicationRecord
       last_activity: player_answers.maximum(:created_at)
     }
   end
-  
+
   def calculate_accuracy
     return 0 if player_answers.count.zero?
     ((player_answers.correct.count.to_f / player_answers.count) * 100).round(2)
   end
-  
+
   def answered?(question)
     player_answers.exists?(question: question)
   end
-  
+
   def answer_for(question)
     player_answers.find_by(question: question)
   end
-  
+
   # Para práctica - obtener preguntas no respondidas
   def unanswered_questions
     Question.where.not(id: answered_questions.select(:id))
   end
-  
+
   def questions_by_category
     answered_questions
       .joins(clinical_case: :category)
-      .group('categories.name')
+      .group("categories.name")
       .count
   end
 end

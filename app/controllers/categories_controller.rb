@@ -15,7 +15,6 @@ class CategoriesController < ApplicationController
     else
       render json: @category.errors, status: :unprocessable_entity
     end
-
   end
 
   # GET /categories/1
@@ -27,9 +26,9 @@ class CategoriesController < ApplicationController
   def update
      if @category.update(category_params)
       render json: @category, status: :ok, location: @category
-    else
+     else
       render json: @category.errors, status: :unprocessable_entity
-    end
+     end
   end
 
   private
@@ -49,6 +48,4 @@ class CategoriesController < ApplicationController
           description: category.description
         }
       end
-
-
 end

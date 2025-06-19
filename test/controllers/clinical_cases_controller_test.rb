@@ -72,11 +72,11 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create clinical_case with nested attributes when authenticated" do
-    assert_difference('ClinicalCase.count', 1) do
-      assert_difference('Question.count', @valid_clinical_case_attrs[:questions_attributes].size) do
+    assert_difference("ClinicalCase.count", 1) do
+      assert_difference("Question.count", @valid_clinical_case_attrs[:questions_attributes].size) do
         # Assuming the first question has 2 answers as defined in @valid_clinical_case_attrs
         num_answers_in_first_question = @valid_clinical_case_attrs[:questions_attributes][0][:answers_attributes].size
-        assert_difference('Answer.count', num_answers_in_first_question) do
+        assert_difference("Answer.count", num_answers_in_first_question) do
           post clinical_cases_url, params: { clinical_case: @valid_clinical_case_attrs }, headers: @auth_headers, as: :json
         end
       end
@@ -125,8 +125,8 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
 
     new_question_answer_count = update_params[:questions_attributes][0][:answers_attributes].size
 
-    assert_difference('Question.count', 1, "A new question should be added") do
-      assert_difference('Answer.count', new_question_answer_count, "Answers for the new question should be added") do
+    assert_difference("Question.count", 1, "A new question should be added") do
+      assert_difference("Answer.count", new_question_answer_count, "Answers for the new question should be added") do
         put clinical_case_url(@existing_clinical_case), params: { clinical_case: update_params }, headers: @auth_headers, as: :json
       end
     end
@@ -147,11 +147,11 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
 
     assert_not_nil question_to_destroy, "Test setup failed: question to destroy is nil"
 
-    assert_difference('Question.count', -1) do
+    assert_difference("Question.count", -1) do
       put clinical_case_url(test_case), params: {
         clinical_case: {
           questions_attributes: [
-            { id: question_to_destroy.id, _destroy: '1' } # Use '1' or true for _destroy
+            { id: question_to_destroy.id, _destroy: "1" } # Use '1' or true for _destroy
           ]
         }
       }, headers: @auth_headers, as: :json
@@ -163,7 +163,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
   test "should destroy clinical_case when authenticated" do
     # Create a new case to destroy to avoid fixture dependency issues
     case_to_destroy = ClinicalCase.create!(title: "To Be Deleted Case", description: "Delete me please", category: @category)
-    assert_difference('ClinicalCase.count', -1) do
+    assert_difference("ClinicalCase.count", -1) do
       delete clinical_case_url(case_to_destroy), headers: @auth_headers, as: :json
     end
     assert_response :no_content
@@ -171,7 +171,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
 
   # --- Validation Tests ---
   test "should not create clinical_case with invalid data" do
-    assert_no_difference('ClinicalCase.count') do
+    assert_no_difference("ClinicalCase.count") do
       post clinical_cases_url, params: { clinical_case: @invalid_clinical_case_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :unprocessable_entity

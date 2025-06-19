@@ -1,17 +1,17 @@
 class QuestionsController < ApplicationController
   before_action :authenticate_admin!
   before_action :set_clinical_case
-  before_action :set_question, only: [:show, :update, :destroy]
+  before_action :set_question, only: [ :show, :update, :destroy ]
 
   # GET /clinical_cases/:clinical_case_id/questions
   def index
     @questions = @clinical_case.questions
-    render json: @questions, include: [:answers]
+    render json: @questions, include: [ :answers ]
   end
 
   # GET /clinical_cases/:clinical_case_id/questions/:id
   def show
-    render json: @question, include: [:answers]
+    render json: @question, include: [ :answers ]
   end
 
   # POST /clinical_cases/:clinical_case_id/questions

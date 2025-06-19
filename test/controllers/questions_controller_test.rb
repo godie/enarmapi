@@ -75,8 +75,8 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create question with nested answers for a clinical_case when authenticated" do
-    assert_difference('@clinical_case.questions.count', 1) do
-      assert_difference('Answer.count', @valid_question_attrs[:answers_attributes].size) do
+    assert_difference("@clinical_case.questions.count", 1) do
+      assert_difference("Answer.count", @valid_question_attrs[:answers_attributes].size) do
         post clinical_case_questions_url(@clinical_case), params: { question: @valid_question_attrs }, headers: @auth_headers, as: :json
       end
     end
@@ -104,7 +104,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
       text: updated_text,
       answers_attributes: [
         # Add a new answer
-        { text: "Brand New Answer", is_correct: false, description: "Just added" },
+        { text: "Brand New Answer", is_correct: false, description: "Just added" }
       ]
     }
     # Conditionally add update for existing answer
@@ -113,10 +113,10 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     end
     # Conditionally add destroy for another answer
     if answer_to_destroy && existing_answer_to_update && answer_to_destroy.id != existing_answer_to_update.id
-        update_params[:answers_attributes] << { id: answer_to_destroy.id, _destroy: '1' }
+        update_params[:answers_attributes] << { id: answer_to_destroy.id, _destroy: "1" }
     elsif !answer_to_destroy && @existing_question.answers.count >=1 && existing_answer_to_update # if only one answer, it's already in existing_answer_to_update
-        # This case means there was only one answer, and we can't destroy it while also updating it simply.
-        # The test for destroying answers is better handled in isolation.
+      # This case means there was only one answer, and we can't destroy it while also updating it simply.
+      # The test for destroying answers is better handled in isolation.
     end
 
     initial_answer_count = @existing_question.answers.count
@@ -128,7 +128,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     end
 
 
-    assert_difference('@existing_question.answers.count', expected_answer_change) do
+    assert_difference("@existing_question.answers.count", expected_answer_change) do
         put clinical_case_question_url(@clinical_case, @existing_question), params: { question: update_params }, headers: @auth_headers, as: :json
     end
 
@@ -147,7 +147,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
   test "should destroy question when authenticated" do
     # Create a question specifically for this test to avoid side effects
     question_to_destroy = @clinical_case.questions.create!(text: "To be deleted soon", points: 1)
-    assert_difference('@clinical_case.questions.count', -1) do
+    assert_difference("@clinical_case.questions.count", -1) do
       delete clinical_case_question_url(@clinical_case, question_to_destroy), headers: @auth_headers, as: :json
     end
     assert_response :no_content
@@ -155,7 +155,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
 
   # --- Validation Tests ---
   test "should not create question with invalid data" do
-    assert_no_difference('@clinical_case.questions.count') do
+    assert_no_difference("@clinical_case.questions.count") do
       post clinical_case_questions_url(@clinical_case), params: { question: @invalid_question_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :unprocessable_entity
@@ -174,11 +174,11 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     question_for_test = @clinical_case.questions.create!(text: "Test question for destroying answers", points: 5)
     answer_to_destroy = question_for_test.answers.create!(text: "Answer to be destroyed", is_correct: false)
 
-    assert_difference('question_for_test.answers.count', -1) do
+    assert_difference("question_for_test.answers.count", -1) do
       put clinical_case_question_url(@clinical_case, question_for_test), params: {
         question: {
           answers_attributes: [
-            { id: answer_to_destroy.id, _destroy: '1' }
+            { id: answer_to_destroy.id, _destroy: "1" }
           ]
         }
       }, headers: @auth_headers, as: :json

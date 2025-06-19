@@ -88,8 +88,8 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create exam with nested exam_questions when authenticated" do
-    assert_difference('Exam.count', 1) do
-      assert_difference('ExamQuestion.count', @valid_exam_attrs[:exam_questions_attributes].size) do
+    assert_difference("Exam.count", 1) do
+      assert_difference("ExamQuestion.count", @valid_exam_attrs[:exam_questions_attributes].size) do
         post exams_url, params: { exam: @valid_exam_attrs }, headers: @auth_headers, as: :json
       end
     end
@@ -144,7 +144,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
 
     # Destroy an EQ
     if eq_to_destroy
-      update_params[:exam_questions_attributes] << { id: eq_to_destroy.id, _destroy: '1' }
+      update_params[:exam_questions_attributes] << { id: eq_to_destroy.id, _destroy: "1" }
     end
 
     # Calculate expected change in ExamQuestion count
@@ -152,7 +152,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     expected_eq_count_change += 1 unless @existing_exam.exam_questions.any? { |eq| eq.question_id == @question2.id } # for new one
     expected_eq_count_change -= 1 if eq_to_destroy # for destroyed one
 
-    assert_difference('ExamQuestion.count', expected_eq_count_change) do
+    assert_difference("ExamQuestion.count", expected_eq_count_change) do
       put exam_url(@existing_exam), params: { exam: update_params }, headers: @auth_headers, as: :json
     end
 
@@ -176,8 +176,8 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     ExamQuestion.create!(exam: exam_to_destroy, question: @question1, points: 10, position: 1)
     ExamQuestion.create!(exam: exam_to_destroy, question: @question2, points: 5, position: 2)
 
-    assert_difference('Exam.count', -1) do
-      assert_difference('ExamQuestion.count', -exam_to_destroy.exam_questions.count) do # All its EQs should be deleted
+    assert_difference("Exam.count", -1) do
+      assert_difference("ExamQuestion.count", -exam_to_destroy.exam_questions.count) do # All its EQs should be deleted
         delete exam_url(exam_to_destroy), headers: @auth_headers, as: :json
       end
     end
@@ -186,7 +186,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
 
   # --- Validation Tests ---
   test "should not create exam with invalid data" do
-    assert_no_difference('Exam.count') do
+    assert_no_difference("Exam.count") do
       post exams_url, params: { exam: @invalid_exam_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :unprocessable_entity
@@ -205,7 +205,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     invalid_eq_attrs = @valid_exam_attrs.deep_dup
     invalid_eq_attrs[:exam_questions_attributes][0][:question_id] = nil
 
-    assert_no_difference(['Exam.count', 'ExamQuestion.count']) do
+    assert_no_difference([ "Exam.count", "ExamQuestion.count" ]) do
       post exams_url, params: { exam: invalid_eq_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :unprocessable_entity # Or :bad_request depending on how model handles this

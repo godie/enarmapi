@@ -58,7 +58,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create user when authenticated" do
-    assert_difference('User.count') do
+    assert_difference("User.count") do
       post users_url, params: { user: @valid_user_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :created
@@ -87,7 +87,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy user when authenticated" do
     user_to_destroy = User.create!(username: "deleteme", email: "deleteme@example.com", password: "password")
-    assert_difference('User.count', -1) do
+    assert_difference("User.count", -1) do
       delete user_url(user_to_destroy), headers: @auth_headers, as: :json
     end
     assert_response :no_content
@@ -95,7 +95,7 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
 
   # --- Validation Tests ---
   test "should not create user with invalid data" do
-    assert_no_difference('User.count') do
+    assert_no_difference("User.count") do
       post users_url, params: { user: @invalid_user_attrs }, headers: @auth_headers, as: :json
     end
     assert_response :unprocessable_entity

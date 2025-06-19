@@ -4,10 +4,10 @@ require "simplecov"
 SimpleCov.start "rails" do
   add_group "Models", "app/models"
   add_group "Controllers", "app/controllers"
-  
+
   # Falla si la cobertura es menor a 80%
   minimum_coverage 80
-  
+
   # Falla si la cobertura baja
   refuse_coverage_drop
 end
@@ -29,7 +29,7 @@ module ActiveSupport
 end
 
 # Include custom test helpers
-Dir[Rails.root.join('test/support/**/*.rb')].each { |f| require f }
+Dir[Rails.root.join("test/support/**/*.rb")].each { |f| require f }
 
 class ActionDispatch::IntegrationTest
   include AuthenticationHelpers

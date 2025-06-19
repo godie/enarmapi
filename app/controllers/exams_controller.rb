@@ -1,6 +1,6 @@
 class ExamsController < ApplicationController
   before_action :authenticate_admin!
-  before_action :set_exam, only: [:show, :update, :destroy]
+  before_action :set_exam, only: [ :show, :update, :destroy ]
 
   # GET /exams
   def index

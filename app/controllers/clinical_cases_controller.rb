@@ -1,7 +1,7 @@
 class ClinicalCasesController < ApplicationController
   before_action :authenticate_admin!
   before_action :set_clinical_case, only: %i[ show update destroy ]
-  #before_action :authenticate_request
+  # before_action :authenticate_request
   def index
     page = params[:page]
     @cases = ClinicalCase.paginate(page: page).order(id: :desc)
