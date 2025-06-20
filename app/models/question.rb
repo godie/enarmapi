@@ -7,7 +7,9 @@ class Question < ApplicationRecord
   has_many :exam_questions
   has_many :exams, through: :exam_questions
 
-  accepts_nested_attributes_for :answers
+  accepts_nested_attributes_for :answers, allow_destroy: true
+
+  validates :text, presence: true
 
   scope :with_clinical_case, -> { where.not(clinical_case_id: nil) }
   scope :standalone, -> { where(clinical_case_id: nil) }

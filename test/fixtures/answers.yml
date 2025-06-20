@@ -1,36 +1,42 @@
 # test/fixtures/answers.yml
 one:
-  id: 1
   description: "IECA o ARA II"
-  question_id: 1
+  question: one # References question 'one' from questions.yml
   is_correct: true
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 two:
-  id: 2
   description: "Betabloqueadores"
-  question_id: 1
+  question: one # References question 'one' from questions.yml
   is_correct: false
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 three:
-  id: 3
   description: "Poliuria"
-  question_id: 2
+  question: two # References question 'two' from questions.yml
   is_correct: true
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 four:
-  id: 4
   description: "Pérdida de peso"
-  question_id: 2
+  question: two # References question 'two' from questions.yml
   is_correct: false
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 five:
-  id: 5
   description: "500-1000mg cada 4-6 horas"
-  question_id: 3
+  question: three # References question 'three' from questions.yml
   is_correct: true
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 six:
-  id: 6
   description: "2000mg cada 8 horas"
-  question_id: 3
+  question: three # References question 'three' from questions.yml
   is_correct: false
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

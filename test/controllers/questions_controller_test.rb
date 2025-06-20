@@ -25,8 +25,8 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
 
     @valid_question_attrs = {
       text: "What is the next step in management?",
-      explanation: "Consider all options.",
-      points: 15,
+      # explanation: "Consider all options.", # Removed
+      # points: 15, # Removed
       answers_attributes: [
         { text: "Option X (Correct)", is_correct: true, description: "This is the best next step." },
         { text: "Option Y (Incorrect)", is_correct: false, description: "This is not advisable." }
@@ -34,8 +34,8 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     }
 
     @invalid_question_attrs = {
-      text: "", # Invalid: text is blank
-      points: 10
+      text: "" # Invalid: text is blank
+      # points: 10 # Removed
     }
   end
 
@@ -146,7 +146,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy question when authenticated" do
     # Create a question specifically for this test to avoid side effects
-    question_to_destroy = @clinical_case.questions.create!(text: "To be deleted soon", points: 1)
+    question_to_destroy = @clinical_case.questions.create!(text: "To be deleted soon") # Removed points
     assert_difference("@clinical_case.questions.count", -1) do
       delete clinical_case_question_url(@clinical_case, question_to_destroy), headers: @auth_headers, as: :json
     end
@@ -171,7 +171,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
 
   test "should correctly handle _destroy for nested answers on update" do
     # Setup: ensure question has at least one answer
-    question_for_test = @clinical_case.questions.create!(text: "Test question for destroying answers", points: 5)
+    question_for_test = @clinical_case.questions.create!(text: "Test question for destroying answers") # Removed points
     answer_to_destroy = question_for_test.answers.create!(text: "Answer to be destroyed", is_correct: false)
 
     assert_difference("question_for_test.answers.count", -1) do

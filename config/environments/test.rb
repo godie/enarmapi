@@ -8,6 +8,10 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Ensure a consistent secret_key_base for the test environment.
+  # This is crucial for JWT token generation and verification consistency.
+  config.secret_key_base = "test_secret_key_base_1234567890_abcdefghijklmnopqrstuvwxyz_1234567890"
+
   # While tests run files are not watched, reloading is not necessary.
   config.enable_reloading = false
 

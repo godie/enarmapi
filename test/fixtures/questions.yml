@@ -1,15 +1,19 @@
 # test/fixtures/questions.yml
+# Test comment
 one:
-  id: 1
   text: "¿Cuál es el tratamiento de primera línea para la hipertensión?"
-  clinical_case_id: 1
+  clinical_case: one
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 two:
-  id: 2
   text: "¿Qué síntoma es más común en la diabetes tipo 2?"
-  clinical_case_id: 1
+  clinical_case: one
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 three:
-  id: 3
   text: "¿Cuál es la dosis recomendada de paracetamol en adultos?"
-  clinical_case_id: 2
+  clinical_case: two
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

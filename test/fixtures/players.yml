@@ -1,11 +1,15 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# test/fixtures/players.yml
+player_one:
+  name: "Player One"
+  email: "playerone@example.com"
+  facebook_id: "fb_player_one_unique_id"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
-one:
-  email: MyString
-  facebook_id: MyString
-  name: MyString
+player_two:
+  name: "Player Two"
+  email: "playertwo@example.com"
+  facebook_id: "fb_player_two_unique_id"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
-two:
-  email: MyString
-  facebook_id: MyString
-  name: MyString

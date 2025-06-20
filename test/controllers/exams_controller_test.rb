@@ -1,7 +1,7 @@
 require "test_helper"
 
 class ExamsControllerTest < ActionDispatch::IntegrationTest
-  fixtures :users, :exams, :questions, :exam_questions
+  fixtures :users, :categories, :clinical_cases, :questions, :exams, :exam_questions # Added categories, clinical_cases
 
   setup do
     @admin_user = users(:admin)
@@ -11,36 +11,35 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     @question1 = questions(:one) # From questions.yml
     @question2 = questions(:two) # From questions.yml
 
-    # Ensure questions exist, otherwise create them
-    if @question1.nil?
-        @category_for_q = Category.first || Category.create!(name: "Default Category for Q")
-        @clinical_case_for_q = ClinicalCase.first || ClinicalCase.create!(category: @category_for_q, title: "Case for Q", description: "Default")
-        @question1 = Question.create!(text: "Default Q1", points: 10, clinical_case: @clinical_case_for_q)
-    end
-    if @question2.nil?
-        @category_for_q = Category.first || Category.create!(name: "Default Category for Q")
-        @clinical_case_for_q = ClinicalCase.first || ClinicalCase.create!(category: @category_for_q, title: "Case for Q", description: "Default")
-        @question2 = Question.create!(text: "Default Q2", points: 5, clinical_case: @clinical_case_for_q)
-    end
+    # Simplified setup: Rely on fixtures being loaded correctly.
+    # Ensure questions(:one) and questions(:two) are valid and associated with clinical_cases(:one) / clinical_cases(:two) in fixtures.
+    # Ensure exams(:one) is valid and has associated exam_questions in fixtures.
+    # The fixtures yml files are the source of truth for these associations.
 
+    @existing_exam = exams(:exam_one) # Changed from exams(:one)
 
-    @existing_exam = exams(:one) # From exams.yml
-    # Fallback if exams(:one) doesn't exist or has no exam_questions
+    # Ensure @question1 and @question2 are valid for use in @valid_exam_attrs
+    # If they might be nil due to sparse fixtures, this setup might need adjustment,
+    # but the goal is to rely on well-defined fixtures.
+    if @question1.nil? || @question2.nil?
+      raise "Fixture setup error: questions :one or :two not found. Ensure questions.yml is populated and correctly associated."
+    end
     if @existing_exam.nil?
-        @existing_exam = Exam.create!(name: "Initial Fixture Exam", description: "An exam from setup")
-        # Optionally associate a question if exam_questions fixture is sparse
-        ExamQuestion.create!(exam: @existing_exam, question: @question1, position: 1, points: @question1.points)
-    elsif @existing_exam.exam_questions.empty?
-        ExamQuestion.create!(exam: @existing_exam, question: @question1, position: 1, points: @question1.points)
-        @existing_exam.reload # reload to see the new association
+      raise "Fixture setup error: exams :one not found. Ensure exams.yml is populated."
     end
-
+    # It's also good practice for @existing_exam to have at least one exam_question for tests that rely on it.
+    # This can be defined in exam_questions.yml. Example:
+    # eq_one_q_one:
+    #   exam: exam_one
+    #   question: one
+    #   points: 10
+    #   position: 1
 
     @valid_exam_attrs = {
       name: "New Comprehensive Exam",
       description: "A detailed exam covering various topics.",
-      available_from: Time.current,
-      available_to: 1.month.from_now,
+      # available_from: Time.current, # Removed
+      # available_to: 1.month.from_now, # Removed
       exam_questions_attributes: [
         { question_id: @question1.id, points: 10, position: 1 },
         { question_id: @question2.id, points: 5, position: 2 }
@@ -162,8 +161,18 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     if existing_eq_to_update
       assert_equal 20, existing_eq_to_update.reload.points
     end
-    unless @existing_exam.exam_questions.any? { |eq| eq.question_id == @question2.id } # This condition means it was added
-      assert @existing_exam.exam_questions.any? { |eq| eq.question_id == @question2.id && eq.points == 15 }
+    # The logic for adding @question2 was conditional:
+    # unless @existing_exam.exam_questions.any? { |eq| eq.question_id == @question2.id }
+    # And eq_to_destroy was set to the exam_question for @question2.
+    # So, if it was destroyed, this assertion for its existence with 15 points is incorrect.
+    # The assert_not ExamQuestion.exists?(eq_to_destroy.id) later will confirm its destruction.
+    # Thus, we should not assert its presence here if it was targeted for destruction.
+    if eq_to_destroy && eq_to_destroy.question_id == @question2.id
+      # If @question2's exam_question was destroyed, we don't assert for its presence with 15 points.
+    else
+      # If @question2's exam_question was NOT destroyed (e.g. it wasn't present to begin with, so it was added), then assert.
+      # This also covers the case where @question2 was not eq_to_destroy and was not pre-existing (so it was added).
+      assert @existing_exam.exam_questions.any? { |eq| eq.question_id == @question2.id && eq.points == 15 }, "ExamQuestion for @question2 with 15 points should exist if not destroyed"
     end
     if eq_to_destroy
       assert_not ExamQuestion.exists?(eq_to_destroy.id)

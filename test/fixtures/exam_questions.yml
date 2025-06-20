@@ -1,11 +1,25 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# test/fixtures/exam_questions.yml
+eq_one_q_one:
+  exam: exam_one # References exam_one from exams.yml
+  question: one    # References question one from questions.yml
+  position: 1
+  points: 10
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+eq_one_q_two:
+  exam: exam_one # References exam_one from exams.yml
+  question: two    # References question two from questions.yml
+  position: 2
+  points: 15
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+eq_two_q_three:
+  exam: exam_two # References exam_two from exams.yml
+  question: three  # References question three from questions.yml
+  position: 1
+  points: 20
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
