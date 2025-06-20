@@ -23,6 +23,14 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     # fixtures :all
     # fixtures :categories, :clinical_cases
+    DatabaseCleaner.strategy = :truncation
+    setup do
+      DatabaseCleaner.start
+    end
+
+    teardown do
+      DatabaseCleaner.clean
+    end
 
     # Add more helper methods to be used by all tests here...
   end
