@@ -1,14 +1,9 @@
 require "test_helper"
 
 class CategoryTest < ActiveSupport::TestCase
-  def setup
-    # Limpiar datos si es necesario
-    ClinicalCase.destroy_all
-    Category.destroy_all
-  end
   # Test de validaciones
   test "should be valid with valid attributes" do
-    category = Category.new(name: "Cardiología")
+    category = Category.new(name: "Urgencias")
     assert category.valid?
   end
 
@@ -25,15 +20,15 @@ class CategoryTest < ActiveSupport::TestCase
   end
 
   test "should not be valid with duplicate name" do
-    Category.create!(name: "Neurología")
-    duplicate_category = Category.new(name: "Neurología")
+    Category.create!(name: "Neurología2")
+    duplicate_category = Category.new(name: "Neurología2")
     assert_not duplicate_category.valid?
     assert_includes duplicate_category.errors[:name], "has already been taken"
   end
 
   test "should be valid with duplicate name but different case" do
-    Category.create!(name: "Pediatría")
-    category = Category.new(name: "PEDIATRÍA")
+    Category.create!(name: "Pediatría2")
+    category = Category.new(name: "PEDIATRÍA2")
     assert_not category.valid?
     assert_includes category.errors[:name], "has already been taken"
   end
@@ -63,12 +58,12 @@ class CategoryTest < ActiveSupport::TestCase
 
   # Test de scopes
   test "should order by name alphabetically by default" do
-    Category.destroy_all
-    cardio = Category.create!(name: "Cardiología")
-    neuro = Category.create!(name: "Neurología")
-    dermato = Category.create!(name: "Dermatología")
+    cardio = Category.find_or_create_by(name: "Cardiología")
+    neuro = Category.find_or_create_by(name: "Neurología")
+    dermato = Category.find_or_create_by(name: "Dermatología")
+    pediatria = Category.find_or_create_by(name: "Pediatría")
 
-    assert_equal [ cardio, dermato, neuro ], Category.alphabetical
+    assert_equal [ cardio, dermato, neuro, pediatria ], Category.alphabetical
   end
 
   test "should find categories with clinical cases" do
@@ -119,7 +114,6 @@ class CategoryTest < ActiveSupport::TestCase
 
   # Test de métodos de clase
   test "should find most used categories" do
-    Category.destroy_all
     popular = Category.create!(name: "Medicina Interna")
     less_popular = Category.create!(name: "Medicina Nuclear")
     unpopular = Category.create!(name: "Medicina Deportiva")
@@ -142,6 +136,7 @@ class CategoryTest < ActiveSupport::TestCase
     assert_equal 2, most_used.length
     assert_equal popular, most_used.first
     assert_equal less_popular, most_used.second
+    assert_equal 0, unpopular.clinical_cases.count
   end
 
   # Test de callbacks

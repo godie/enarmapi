@@ -1,6 +1,8 @@
 class ClinicalCasesController < ApplicationController
-  before_action :authenticate_admin!
+  before_action :authenticate_admin!, except: [ :show ]
   before_action :set_clinical_case, only: %i[ show update destroy ]
+  before_action :authenticate_admin_or_player!, only: [ :show ]
+
   # before_action :authenticate_request
   def index
     page = params[:page]

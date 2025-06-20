@@ -18,4 +18,17 @@ module AuthenticationHelpers
     token = JsonWebToken.encode(user_id: admin.id)
     { 'Authorization': "Bearer #{token}" }
   end
+
+  def player_auth_headers(player_user = nil)
+    player = player_user || players(:player_one)
+    unless player
+      player =  Player.create!(
+        email: "test_player#{SecureRandom.hex(3)}@example.com",
+        facebook_id: "#{SecureRandom.hex(16)}",
+        name: "test_player_#{SecureRandom.hex(3)}"
+      )
+    end
+    token = JsonWebToken.encode(player_id: player.id)
+    { 'Authorization': "Bearer #{token}" }
+  end
 end

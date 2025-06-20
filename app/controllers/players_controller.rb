@@ -1,6 +1,8 @@
 class PlayersController < ApplicationController
   before_action :set_player_for_standard_actions, only: %i[ show update destroy ]
   before_action :find_or_initialize_player_for_create, only: %i[ create ]
+  before_action :authenticate_admin!, only: %i[index destroy update]
+  before_action :authenticate_player!, only: %i[show]
 
   # GET /players
   def index
@@ -11,10 +13,13 @@ class PlayersController < ApplicationController
 
   # GET /players/1
   def show
-    render json: player_json(@player)
+    render json: player_json(@player) if @current_player.id == params[:id]
+    render json: { error: "No autorizado" }, status: :unauthorized
   end
 
   # POST /players
+  # TODO add verify token or authenticity token, because someone
+  # can attack the endpoint and create a lot of players...
   def create
     # If @player is found by find_or_initialize_player_for_create and it's persisted, it means it already exists.
     if @player.persisted?
@@ -55,15 +60,6 @@ class PlayersController < ApplicationController
     end
   end
 
-  # PATCH/PUT /players/1
-  def update
-    if @player.update(player_params)
-      render json: player_json(@player)
-    else
-      render json: @player.errors, status: :unprocessable_entity
-    end
-  end
-
   # DELETE /players/1
   def destroy
     @player.destroy!
@@ -91,11 +87,13 @@ class PlayersController < ApplicationController
     end
 
     def player_json(player)
+      token = JsonWebToken.encode(player_id: player.id)
         {
           id: player.id,
           facebook_id: player.facebook_id,
           name: player.name,
-          email: player.email
+          email: player.email,
+          token: token
         }
-      end
+    end
 end
