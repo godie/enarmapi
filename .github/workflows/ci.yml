@@ -4,6 +4,11 @@ on:
   pull_request:
   push:
     branches: [ main ]
+  
+env:
+  POSTGRES_DB: postgres_test
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: password
 
 jobs:
   scan_ruby:
@@ -40,6 +45,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+
+
     # services:
     #  redis:
     #    image: redis
@@ -58,12 +77,22 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -yqq install libpq-dev
+          bundle install --jobs 4 --retry 3
 
       - name: Run tests
         env:
           RAILS_ENV: test
+          PGHOST: localhost
+          DISABLE_SPRING: 1
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
+        run: |
+          cp config/database.ci.yml config/database.yml
+          sleep 5
+          bin/rails db:test:prepare test test:system
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

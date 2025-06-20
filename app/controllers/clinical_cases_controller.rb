@@ -1,6 +1,7 @@
 class ClinicalCasesController < ApplicationController
+  before_action :authenticate_admin!
   before_action :set_clinical_case, only: %i[ show update destroy ]
-  #before_action :authenticate_request
+  # before_action :authenticate_request
   def index
     page = params[:page]
     @cases = ClinicalCase.paginate(page: page).order(id: :desc)
@@ -21,6 +22,8 @@ class ClinicalCasesController < ApplicationController
   end
 
   def destroy
+    @clinical_case.destroy
+    head :no_content # Or any other appropriate response
   end
 
   def update
@@ -38,16 +41,20 @@ class ClinicalCasesController < ApplicationController
 
   def clinical_case_params
     params.require(:clinical_case).permit(
-      :description, # u otros atributos de ClinicalCase
+      :title,
+      :description,
       :category_id,
       questions_attributes: [
-        :id, # Importante para actualizar preguntas existentes
-        :_destroy, # Para eliminar preguntas
-        :text, # u otros atributos de Question
+        :id,
+        :_destroy,
+        :text,
+        :explanation, # Added explanation
         answers_attributes: [
-          :id, # Importante para actualizar respuestas existentes
-          :_destroy, # Para eliminar respuestas
-          :text, :is_correct, :description # u otros atributos de Answer
+          :id,
+          :_destroy,
+          :text,
+          :is_correct, # Assuming is_correct is the correct field name in the model
+          :description
         ]
       ]
     )

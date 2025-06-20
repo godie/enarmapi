@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :users
   resources :players
   post "auth_user", to: "auth#auth_user"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -11,9 +12,10 @@ Rails.application.routes.draw do
     resources :questions
   end
 
-  post 'player_answers', to: 'player_answers#create'
-  get 'player_answers', to: 'player_answers#index'
+  post "player_answers", to: "player_answers#create"
+  get "player_answers", to: "player_answers#index"
 
+  resources :exams
 
   # Defines the root path route ("/")
   # root "posts#index"

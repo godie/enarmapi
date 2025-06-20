@@ -1,7 +1,7 @@
 class Question < ApplicationRecord
   belongs_to :clinical_case
   has_one :category, through: :clinical_case
-  has_many :answers
+  has_many :answers, dependent: :destroy
   has_many :player_answers
   has_many :practicing_players, through: :player_answers, source: :player
   has_many :exam_questions

@@ -15,11 +15,11 @@ class PlayersController < ApplicationController
 
   # POST /players
   def create
-    return render json: player_json(@player), status: :ok, location: @player if(@player)
+    return render json: player_json(@player), status: :ok, location: @player if @player
     @player = Player.new(player_params)
 
     if @player.save
-      render json: {player: player_json(@player)}, status: :created, location: @player
+      render json: { player: player_json(@player) }, status: :created, location: @player
     else
       render json: @player.errors, status: :unprocessable_entity
     end
