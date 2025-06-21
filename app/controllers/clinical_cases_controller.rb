@@ -1,6 +1,8 @@
 class ClinicalCasesController < ApplicationController
-  before_action :authenticate_admin!
+  before_action :authenticate_admin!, except: [ :show ]
   before_action :set_clinical_case, only: %i[ show update destroy ]
+  before_action :authenticate_admin_or_player!, only: [ :show ]
+
   # before_action :authenticate_request
   def index
     page = params[:page]
@@ -15,7 +17,7 @@ class ClinicalCasesController < ApplicationController
   def create
     @clinical_case = ClinicalCase.new(clinical_case_params)
     if @clinical_case.save
-      render json: @clinical_case, status: :created, location: @clinical_case
+      render json: @clinical_case, status: :created, location: @clinical_case, include: { questions: { include: :answers } }
     else
       render json: @clinical_case.errors, status: :unprocessable_entity
     end
@@ -41,19 +43,20 @@ class ClinicalCasesController < ApplicationController
 
   def clinical_case_params
     params.require(:clinical_case).permit(
-      :title,
+      :name, # Changed from title to name
       :description,
       :category_id,
       questions_attributes: [
         :id,
         :_destroy,
         :text,
-        :explanation, # Added explanation
+        # :explanation, # Removed as it's not an attribute of Question
+        # :points,      # Removed as it's not an attribute of Question
         answers_attributes: [
           :id,
           :_destroy,
           :text,
-          :is_correct, # Assuming is_correct is the correct field name in the model
+          :is_correct,
           :description
         ]
       ]

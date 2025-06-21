@@ -1,0 +1,24 @@
+# test/fixtures/player_exams.yml
+player_one_exam_one:
+  player: player_one       # References player_one from players.yml
+  exam: exam_one           # References exam_one from exams.yml
+  status: "completed"
+  score: 10
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+player_two_exam_one:
+  player: player_two       # References player_two from players.yml
+  exam: exam_one           # References exam_one from exams.yml
+  status: "in_progress"
+  score: 0
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+player_one_exam_two:
+  player: player_one       # References player_one from players.yml
+  exam: exam_two           # References exam_two from exams.yml
+  status: "completed"
+  score: 20
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

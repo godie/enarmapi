@@ -1,12 +1,15 @@
 # test/fixtures/categories.yml
 one:
-  id: 1
   name: Cardiología
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 two:
-  id: 2
   name: Neurología
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 three:
-  id: 3
   name: Pediatría
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

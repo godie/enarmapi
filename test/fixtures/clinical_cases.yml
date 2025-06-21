@@ -1,12 +1,14 @@
 # test/fixtures/clinical_cases.yml
 one:
-  id: 1
   name: "Paciente con dolor torácico"
   description: "Hombre de 65 años con dolor torácico opresivo"
-  category_id: 1
+  category: one # References category 'one' from categories.yml
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
 
 two:
-  id: 2
   name: "Paciente con cefalea"
   description: "Mujer de 35 años con cefalea recurrente"
-  category_id: 2
+  category: two # References category 'two' from categories.yml
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

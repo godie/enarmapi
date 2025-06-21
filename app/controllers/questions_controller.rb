@@ -19,7 +19,7 @@ class QuestionsController < ApplicationController
     @question = @clinical_case.questions.new(question_params)
 
     if @question.save
-      render json: @question, status: :created, location: clinical_case_question_url(@clinical_case, @question)
+      render json: @question, status: :created, location: clinical_case_question_url(@clinical_case, @question), include: [ :answers ]
     else
       render json: @question.errors, status: :unprocessable_entity
     end
@@ -57,8 +57,8 @@ class QuestionsController < ApplicationController
   def question_params
     params.require(:question).permit(
       :text,
-      :explanation,
-      :points,
+      # :explanation, # Removed, not an attribute
+      # :points,      # Removed, not an attribute
       answers_attributes: [
         :id,
         :_destroy,

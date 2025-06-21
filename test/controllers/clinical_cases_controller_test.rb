@@ -14,14 +14,14 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
 
 
     @valid_clinical_case_attrs = {
-      title: "New Case Title",
+      name: "New Case Title", # Changed from title
       description: "A description for the new case.",
       category_id: @category.id,
       questions_attributes: [
         {
           text: "What is the primary symptom for this new case?",
-          explanation: "This is important to know for diagnosis.",
-          points: 10,
+          # explanation: "This is important to know for diagnosis.", # Removed
+          # points: 10, # Removed
           answers_attributes: [
             { text: "Symptom Answer A (Correct)", is_correct: true, description: "This is the correct primary symptom." },
             { text: "Symptom Answer B (Incorrect)", is_correct: false, description: "This is not the primary symptom." }
@@ -31,7 +31,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     }
 
     @invalid_clinical_case_attrs = {
-      title: "", # Invalid: title is blank
+      name: "", # Invalid: name is blank, Changed from title
       description: "A description for an invalid case.",
       category_id: @category.id # Assuming category is valid
     }
@@ -54,7 +54,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get unauthorized on update without token" do
-    put clinical_case_url(@existing_clinical_case), params: { clinical_case: { title: "Updated Title Attempt" } }, as: :json
+    put clinical_case_url(@existing_clinical_case), params: { clinical_case: { name: "Updated Title Attempt" } }, as: :json # Changed from title
     assert_response :unauthorized
   end
 
@@ -83,7 +83,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :created
     response_json = JSON.parse(response.body)
-    assert_equal @valid_clinical_case_attrs[:title], response_json["title"]
+    assert_equal @valid_clinical_case_attrs[:name], response_json["name"] # Changed from title
     assert_equal @valid_clinical_case_attrs[:questions_attributes].size, response_json["questions"].size, "Should create the correct number of questions"
     assert_equal @valid_clinical_case_attrs[:questions_attributes][0][:answers_attributes].size, response_json["questions"][0]["answers"].size, "Should create the correct number of answers for the first question"
   end
@@ -92,7 +92,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     get clinical_case_url(@existing_clinical_case), headers: @auth_headers, as: :json
     assert_response :success
     response_json = JSON.parse(response.body)
-    assert_equal @existing_clinical_case.title, response_json["title"]
+    assert_equal @existing_clinical_case.name, response_json["name"] # Changed from title
     assert_not_nil response_json["questions"], "Should include questions"
     # Check if the first question has answers, if questions exist
     if response_json["questions"]&.first
@@ -106,13 +106,13 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     # It's important that question_id for existing questions is not provided unless updating that specific question.
     # For adding new questions, no 'id' should be present in the attributes hash.
     update_params = {
-      title: updated_title,
+      name: updated_title, # Changed from title
       questions_attributes: [
         # This represents adding a new question
         {
           text: "A brand new question for update?",
-          explanation: "New explanation for update.",
-          points: 5,
+          # explanation: "New explanation for update.", # Removed
+          # points: 5, # Removed
           answers_attributes: [
             { text: "New Answer A for update (Correct)", is_correct: true }
           ]
@@ -134,7 +134,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     @existing_clinical_case.reload
 
-    assert_equal updated_title, @existing_clinical_case.title
+    assert_equal updated_title, @existing_clinical_case.name # Changed from title
     assert_equal initial_question_count + 1, @existing_clinical_case.questions.count, "Question count should increment by 1"
     assert @existing_clinical_case.questions.any? { |q| q.text == "A brand new question for update?" }
   end
@@ -142,8 +142,8 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
   test "should correctly handle _destroy for nested questions on update" do
     # Ensure the clinical case has at least one question to destroy
     # Create a specific case with a question for this test to avoid fixture side effects
-    test_case = ClinicalCase.create!(title: "Case for destroying question", category: @category, description: "Test")
-    question_to_destroy = test_case.questions.create!(text: "To be destroyed", points: 5)
+    test_case = ClinicalCase.create!(name: "Case for destroying question", category: @category, description: "Test") # Changed from title
+    question_to_destroy = test_case.questions.create!(text: "To be destroyed") # Removed points
 
     assert_not_nil question_to_destroy, "Test setup failed: question to destroy is nil"
 
@@ -162,7 +162,7 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy clinical_case when authenticated" do
     # Create a new case to destroy to avoid fixture dependency issues
-    case_to_destroy = ClinicalCase.create!(title: "To Be Deleted Case", description: "Delete me please", category: @category)
+    case_to_destroy = ClinicalCase.create!(name: "To Be Deleted Case", description: "Delete me please", category: @category) # Changed from title
     assert_difference("ClinicalCase.count", -1) do
       delete clinical_case_url(case_to_destroy), headers: @auth_headers, as: :json
     end
@@ -178,10 +178,10 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should not update clinical_case with invalid data" do
-    original_title = @existing_clinical_case.title
-    put clinical_case_url(@existing_clinical_case), params: { clinical_case: { title: "" } }, headers: @auth_headers, as: :json
+    original_name = @existing_clinical_case.name # Changed from title
+    put clinical_case_url(@existing_clinical_case), params: { clinical_case: { name: "" } }, headers: @auth_headers, as: :json # Changed from title
     assert_response :unprocessable_entity
     @existing_clinical_case.reload
-    assert_equal original_title, @existing_clinical_case.title # Title should not have changed
+    assert_equal original_name, @existing_clinical_case.name # Changed from title
   end
 end

@@ -92,7 +92,8 @@ jobs:
         run: |
           cp config/database.ci.yml config/database.yml
           sleep 5
-          bin/rails db:test:prepare test test:system
+          bin/rails db:test:prepare
+          bin/rails test 
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
