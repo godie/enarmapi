@@ -15,6 +15,7 @@ class ClinicalCasesController < ApplicationController
   end
 
   def create
+    clinical_case_params[:name] = "clinical_case_#{SecureRandom.hex(10)}" unless clinical_case_params[:name].present?
     @clinical_case = ClinicalCase.new(clinical_case_params)
     if @clinical_case.save
       render json: @clinical_case, status: :created, location: @clinical_case, include: { questions: { include: :answers } }
@@ -29,6 +30,7 @@ class ClinicalCasesController < ApplicationController
   end
 
   def update
+    # params[:clinical_case][:name] = "clinical_case_#{SecureRandom.hex(10)}" unless params[:clinical_case][:name].present?
     if @clinical_case.update(clinical_case_params)
       render json: @clinical_case, include: { questions: { include: :answers } }
     else
