@@ -14,7 +14,7 @@ class AuthController < ApplicationController
 
   def info
     {
-      RAILS_ENV: Rail.env,
+      RAILS_ENV: Rails.env,
       DB_USER: ENV["DATABASE_USER"],
       PASS: ENV["DATABASE_PASSWORD"],
       HOST: ENV["DATABASE_HOST"]
