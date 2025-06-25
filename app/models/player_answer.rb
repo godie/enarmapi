@@ -24,7 +24,7 @@ class PlayerAnswer < ApplicationRecord
   private
 
   def set_correctness
-    self.is_correct = answer.correct? if answer
+    self.is_correct = answer.is_correct? if answer
   end
   def update_player_stats
   end

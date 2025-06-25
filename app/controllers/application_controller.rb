@@ -1,4 +1,8 @@
 class ApplicationController < ActionController::API
+  rescue_from ActionController::ParameterMissing do |exception|
+    render json: { error: exception.message }, status: :bad_request # HTTP 400
+  end
+
   def authenticate_request
     @current_user = User.find_by(id: decoded_token[:user_id]) if decoded_token
     render json: { error: "No autorizado" }, status: :unauthorized unless @current_user
@@ -11,19 +15,19 @@ class ApplicationController < ActionController::API
   end
 
   def authenticate_admin_or_player!
-  token = decoded_token
-  return render json: { error: "No autorizado" }, status: :unauthorized unless token
+    token = decoded_token
+    return render json: { error: "No autorizado" }, status: :unauthorized unless token
 
-  if token[:user_id]
-    @current_user = User.find_by(id: token[:user_id])
-    return if @current_user
-  elsif token[:player_id]
-    @current_player = Player.find_by(id: token[:player_id])
-    return if @current_player
+    if token[:user_id]
+      @current_user = User.find_by(id: token[:user_id])
+      return if @current_user
+    elsif token[:player_id]
+      @current_player = Player.find_by(id: token[:player_id])
+      return if @current_player
+    end
+
+    render json: { error: "No autorizado" }, status: :unauthorized
   end
-
-  render json: { error: "No autorizado" }, status: :unauthorized
-end
 
   private
 
