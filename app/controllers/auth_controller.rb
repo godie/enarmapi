@@ -13,11 +13,12 @@ class AuthController < ApplicationController
   end
 
   def info
-    {
+    info = {
       RAILS_ENV: Rails.env,
       DB_USER: ENV["DATABASE_USER"],
       PASS: ENV["DATABASE_PASSWORD"],
       HOST: ENV["DATABASE_HOST"]
     }
+    render json: info, status: :ok
   end
 end
