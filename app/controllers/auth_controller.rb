@@ -11,4 +11,13 @@ class AuthController < ApplicationController
       render json: { error: "Credenciales inválidas" }, status: :unauthorized
     end
   end
+
+  def info
+    {
+      RAILS_ENV: Rail.env,
+      DB_USER: ENV["DATABASE_USER"],
+      PASS: ENV["DATABASE_PASSWORD"],
+      HOST: ENV["DATABASE_HOST"]
+    }
+  end
 end

@@ -36,7 +36,6 @@ test:
 production:
   <<: *default
   database: enarmapi_production
-  username: blogpg
   password: <%= ENV['DATABASE_PASSWORD']
   port: 5432
   # database: path/to/persistent/storage/production.sqlite3
