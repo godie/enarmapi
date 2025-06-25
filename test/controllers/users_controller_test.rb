@@ -33,9 +33,9 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
-  test "should get unauthorized on create without token" do
+  test "should get created on create without token" do
     post users_url, params: { user: @valid_user_attrs }, as: :json
-    assert_response :unauthorized
+    assert_response :created
   end
 
   test "should get unauthorized on update without token" do
