@@ -366,4 +366,18 @@ This document outlines the available API endpoints for the Enarm API application
     *   **Description:** Deletes a specific exam.
     *   **Authentication:** Likely required (Admin/Content Creator).
 
+### Achievements (Gamification)
+
+*   **GET /achievements**
+    *   **Controller & Action:** `achievements#index`
+    *   **Description:** Retrieves a list of all available achievements in the system.
+    *   **Authentication:** Likely not required or user-level.
+    *   **Response Fields (example):** `id`, `name`, `description`, `icon_url`, `points`. (Excludes `criteria`, `created_at`, `updated_at`).
+
+*   **GET /players/:player_id/achievements**
+    *   **Controller & Action:** `players/achievements#index`
+    *   **Description:** Retrieves a list of achievements earned by a specific player.
+    *   **Authentication:** Likely required (Owner or Admin).
+    *   **Response Fields (example per achievement):** `id`, `name`, `description`, `icon_url`, `points`, `achieved_at`, `progress`. (Excludes `criteria` from base achievement, `created_at`, `updated_at`).
+
 *Note: "Likely required" for authentication means that while not explicitly defined in routes.rb, standard practice for these types of actions would involve authentication and authorization checks in the respective controllers.*

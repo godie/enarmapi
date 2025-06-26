@@ -1,11 +1,20 @@
 # test/fixtures/exams.yml
-exam_one:
-  name: "General Medicine Exam"
+
+exam_one_urgencias:
+  name: "Examen de Urgencias 1"
+  category: urgencias # references categories(:urgencias) from categories.yml
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 
-exam_two:
-  name: "Cardiology Speciality Exam"
+exam_two_cardiologia:
+  name: "Examen de Cardiología 1"
+  category: one       # references categories(:one) from categories.yml (Cardiología)
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 
+# Add more exams as needed for different scenarios
+exam_for_service_tests:
+  name: "Examen para Service Tests"
+  category: urgencias
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

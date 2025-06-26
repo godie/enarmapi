@@ -1,0 +1,28 @@
+# test/fixtures/achievements.yml
+
+exams_completed_1:
+  name: "Pionero del Saber"
+  description: "Completa tu primer examen en cualquier categoría."
+  criteria: { "type": "exams_completed", "count": 1 }
+  points: 10
+  icon_url: "pioneer.png"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+exams_completed_5:
+  name: "Estudiante Dedicado"
+  description: "Completa 5 exámenes en total."
+  criteria: { "type": "exams_completed", "count": 5 }
+  points: 50
+  icon_url: "dedicated_student.png"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+category_urgencias_expert:
+  name: "Maestro de Urgencias"
+  description: "Obtén una precisión del 80% o más en la categoría 'Urgencias' después de al menos 2 exámenes en ella."
+  criteria: { "type": "category_accuracy", "category_id": <%= ActiveRecord::FixtureSet.identify(:urgencias) %>, "accuracy_threshold": 80, "min_exams_in_category": 2 }
+  points: 75
+  icon_url: "urgencias_master.png"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

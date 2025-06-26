@@ -13,3 +13,9 @@ three:
   name: Pediatría
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
+
+urgencias: # Added for achievement fixture dependency
+  name: Urgencias
+  description: "Categoría de Urgencias Médicas"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

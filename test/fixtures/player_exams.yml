@@ -1,24 +1,29 @@
 # test/fixtures/player_exams.yml
-player_one_exam_one:
-  player: player_one       # References player_one from players.yml
-  exam: exam_one           # References exam_one from exams.yml
-  status: "completed"
-  score: 10
-  created_at: <%= Time.zone.now %>
-  updated_at: <%= Time.zone.now %>
 
-player_two_exam_one:
-  player: player_two       # References player_two from players.yml
-  exam: exam_one           # References exam_one from exams.yml
-  status: "in_progress"
-  score: 0
-  created_at: <%= Time.zone.now %>
-  updated_at: <%= Time.zone.now %>
+# Player 'one' (Player Fixture One) takes 'exam_one_urgencias'
+pe_one_exam_urgencias:
+  player: one  # Must match a label in players.yml
+  exam: exam_one_urgencias # Must match a label in exams.yml
+  score: 85
+  completed_at: <%= Time.current - 1.day %>
+  created_at: <%= Time.current - 1.day %>
+  updated_at: <%= Time.current - 1.day %>
 
-player_one_exam_two:
-  player: player_one       # References player_one from players.yml
-  exam: exam_two           # References exam_two from exams.yml
-  status: "completed"
-  score: 20
-  created_at: <%= Time.zone.now %>
-  updated_at: <%= Time.zone.now %>
+# Player 'two' (Player Fixture Two) takes 'exam_two_cardiologia'
+pe_two_exam_cardio:
+  player: two # Must match a label in players.yml
+  exam: exam_two_cardiologia # Must match a label in exams.yml
+  score: 92
+  completed_at: <%= Time.current - 2.days %>
+  created_at: <%= Time.current - 2.days %>
+  updated_at: <%= Time.current - 2.days %>
+
+# Player 'player_for_achievements' takes 'exam_for_service_tests'
+# This is used in Achievements::UnlockServiceTest
+pe_ach_player_exam_service_test_1:
+  player: player_for_achievements # Must match a label in players.yml
+  exam: exam_for_service_tests   # Must match a label in exams.yml
+  score: 77
+  completed_at: <%= Time.current - 5.hours %>
+  created_at: <%= Time.current - 5.hours %>
+  updated_at: <%= Time.current - 5.hours %>

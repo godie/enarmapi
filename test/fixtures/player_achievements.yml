@@ -1,0 +1,13 @@
+# test/fixtures/player_achievements.yml
+
+player_one_got_first_exam_achievement:
+  player: one # Corresponds to players(:one)
+  achievement: exams_completed_1 # Corresponds to achievements(:exams_completed_1)
+  achieved_at: <%= Time.zone.now - 1.day %> # Example: achieved yesterday
+  progress: { status: "completed" }
+
+# player_two_got_dedicated_student:
+#   player: two
+#   achievement: exams_completed_5
+#   achieved_at: <%= Time.zone.now - 2.hours %>
+#   progress: { current_exams: 5, total_needed: 5}
