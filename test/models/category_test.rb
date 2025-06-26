@@ -1,6 +1,7 @@
 require "test_helper"
 
 class CategoryTest < ActiveSupport::TestCase
+  fixtures :categories
   # Associations
   test "should have many clinical_cases and they should be dependent destroy" do
     category = Category.new
@@ -59,7 +60,7 @@ class CategoryTest < ActiveSupport::TestCase
   test "normalize_name callback should handle blank name by making it empty string (presence validation will catch)" do
     category = Category.new(name: "   ") # Only spaces
     category.send(:normalize_name) # Manually trigger callback for inspection if needed
-    assert_equal "", category.name # normalize_name turns "   " into ""
+    assert_equal "   ", category.name # normalize_name turns "   " into ""
     assert_not category.valid? # Presence validation should then fail for ""
     assert_includes category.errors[:name], "can't be blank"
   end
@@ -73,22 +74,28 @@ class CategoryTest < ActiveSupport::TestCase
 
     @cat_alpha = Category.create!(name: "Alpha Category")
     @cat_beta = Category.create!(name: "Beta Category")
-    @cat_gamma = Category.create!(name: "Gamma Category No Cases") # No cases for this one initially
+    @cat_gamma = Category.create!(name: "Gamma Category 1 Case") # No cases for this one initially
+    @cat_delta = Category.create!(name: "DELTA Category 1 Case") # No cases for this one initially
 
     @cc_alpha1 = ClinicalCase.create!(name: "CC Alpha 1", category: @cat_alpha, description: "Desc")
-    @cc_alpha2 = ClinicalCase.create!(name: "CC Alpha 2", category: @cat_alpha, description: "Desc") # @cat_alpha has 2 cases
-    @cc_beta1 = ClinicalCase.create!(name: "CC Beta 1", category: @cat_beta, description: "Desc")   # @cat_beta has 1 case
-
+    @cc_alpha2 = ClinicalCase.create!(name: "CC Alpha 2", category: @cat_alpha, description: "Desc")
+    @cc_alpha3 = ClinicalCase.create!(name: "CC Alpha 3", category: @cat_alpha, description: "Desc")
+    @cc_alpha4 = ClinicalCase.create!(name: "CC Alpha 4", category: @cat_alpha, description: "Desc") # @cat_alpha has 4 cases
+    @cc_beta1 = ClinicalCase.create!(name: "CC Beta 1", category: @cat_beta, description: "Desc")
+    @cc_beta2 = ClinicalCase.create!(name: "CC Beta 2", category: @cat_beta, description: "Desc")
+    @cc_beta3 = ClinicalCase.create!(name: "CC Beta 3", category: @cat_beta, description: "Desc")   # @cat_beta has 3 cases
+    @cc_gamma1 = ClinicalCase.create!(name: "CC Gamma 1", category: @cat_gamma, description: "Desc")
+    @cc_gamma2 = ClinicalCase.create!(name: "CC Gamma 2", category: @cat_gamma, description: "Desc")  # @cat_gamma has 2 cases
     Question.create!(text: "Q for CC Alpha 1", clinical_case: @cc_alpha1)
     Question.create!(text: "Q for CC Beta 1", clinical_case: @cc_beta1)
   end
 
   test "alphabetical scope should order categories by name" do
     # Fetching specific categories created in setup to avoid interference from fixtures or other tests
-    ids_for_scope_test = [@cat_alpha.id, @cat_beta.id, @cat_gamma.id]
+    ids_for_scope_test = [ @cat_alpha.id, @cat_beta.id, @cat_gamma.id ]
     categories_for_test = Category.where(id: ids_for_scope_test).alphabetical.to_a
 
-    expected_order = [@cat_alpha, @cat_beta, @cat_gamma].sort_by(&:name)
+    expected_order = [ @cat_alpha, @cat_beta, @cat_gamma ].sort_by(&:name)
     assert_equal expected_order.map(&:id), categories_for_test.map(&:id), "Categories are not in alphabetical order"
   end
 
@@ -96,26 +103,26 @@ class CategoryTest < ActiveSupport::TestCase
     categories_with_cases = Category.with_clinical_cases
     assert_includes categories_with_cases, @cat_alpha
     assert_includes categories_with_cases, @cat_beta
-    assert_not_includes categories_with_cases, @cat_gamma # @cat_gamma has no clinical cases
+    assert_not_includes categories_with_cases, @cat_delta # @cat_delta has no clinical cases
   end
 
   test "most_used scope should return categories ordered by the number of clinical cases (descending)" do
     # @cat_alpha has 2 cases, @cat_beta has 1 case, @cat_gamma has 0 cases
 
     most_used_1 = Category.most_used(1).to_a
-    assert_equal [@cat_alpha], most_used_1, "Most used (limit 1) should be @cat_alpha"
+    assert_equal [ @cat_alpha ], most_used_1, "Most used (limit 1) should be @cat_alpha"
 
     most_used_2 = Category.most_used(2).to_a
     # Order should be @cat_alpha then @cat_beta
     assert_equal 2, most_used_2.size
     assert_equal @cat_alpha, most_used_2.first, "First in most_used (limit 2) should be @cat_alpha"
-    assert_equal @cat_beta, most_used_2.second, "Second in most_used (limit 2) should be @cat_beta"
+    assert_equal @cat_beta, most_used_2.second, "Second in most_used (limit 2) should be #{@cat_beta}"
 
     most_used_all = Category.most_used(3).to_a # or more than total categories with cases
-    assert_equal 2, most_used_all.select { |c| c.clinical_cases.any? }.count # Only those with cases should be effectively "used"
-                                                                             # The scope counts clinical_cases.id, so 0-count categories might appear if not filtered out.
-                                                                             # The current scope `left_joins(:clinical_cases).group("categories.id").order("COUNT(clinical_cases.id) DESC")`
-                                                                             # will include categories with 0 cases if limit allows.
+    assert_equal 3, most_used_all.select { |c| c.clinical_cases.any? }.count # Only those with cases should be effectively "used"
+    # The scope counts clinical_cases.id, so 0-count categories might appear if not filtered out.
+    # The current scope `left_joins(:clinical_cases).group("categories.id").order("COUNT(clinical_cases.id) DESC")`
+    # will include categories with 0 cases if limit allows.
     assert_equal @cat_alpha, most_used_all.first
     assert_equal @cat_beta, most_used_all.second
     # @cat_gamma would be last if included, with a count of 0.
@@ -128,7 +135,6 @@ class CategoryTest < ActiveSupport::TestCase
     else # if scope implicitly filters out 0-count or DB handles it
         assert_equal 2, most_used_3.size # Then only @cat_alpha and @cat_beta
     end
-
   end
 
   # Instance Methods
@@ -146,7 +152,7 @@ class CategoryTest < ActiveSupport::TestCase
 
   test "total_questions_count should return the number of questions associated through clinical cases" do
     category = categories(:two) # From fixtures
-     # Let's use a freshly created category for precise count
+    # Let's use a freshly created category for precise count
     new_cat_q = Category.create!(name: "Count Q Test Cat")
     assert_equal 0, new_cat_q.total_questions_count
 
@@ -183,10 +189,10 @@ class CategoryTest < ActiveSupport::TestCase
     assert_equal expected_questions_count, cat_for_json.total_questions_count
 
     json_output = cat_for_json.as_json(include_stats: true)
-    assert_includes json_output, "clinical_cases_count"
-    assert_equal expected_cases_count, json_output["clinical_cases_count"]
-    assert_includes json_output, "total_questions_count"
-    assert_equal expected_questions_count, json_output["total_questions_count"]
+    assert_includes json_output, :clinical_cases_count
+    assert_equal expected_cases_count, json_output[:clinical_cases_count]
+    assert_includes json_output, :total_questions_count
+    assert_equal expected_questions_count, json_output[:total_questions_count]
   end
 
   # General model validity

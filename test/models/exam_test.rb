@@ -1,6 +1,7 @@
 require "test_helper"
 
 class ExamTest < ActiveSupport::TestCase
+  fixtures :exams, :questions, :players
   # Associations
   test "should have many exam_questions, ordered by position, and dependent destroy" do
     exam = Exam.new
@@ -16,7 +17,7 @@ class ExamTest < ActiveSupport::TestCase
     eq_pos1 = ExamQuestion.create!(exam: exam_with_eqs, question: q1, position: 1, points: 10)
 
     exam_with_eqs.reload # Reload to get ordered exam_questions
-    assert_equal [eq_pos1.id, eq_pos2.id], exam_with_eqs.exam_questions.map(&:id), "ExamQuestions not ordered by position"
+    assert_equal [ eq_pos1.id, eq_pos2.id ], exam_with_eqs.exam_questions.map(&:id), "ExamQuestions not ordered by position"
 
     eq_ids = exam_with_eqs.exam_questions.pluck(:id)
     assert_difference "ExamQuestion.count", -eq_ids.size do
@@ -62,7 +63,7 @@ class ExamTest < ActiveSupport::TestCase
 
   # Setup for general tests
   setup do
-    @exam_one_fixture = exams(:one) # Fixture: "Cardiology Basics"
+    @exam_one_fixture = exams(:exam_one) # Fixture: "Cardiology Basics"
     @question1_fixture = questions(:one)
     @question2_fixture = questions(:two)
     @player_one_fixture = players(:player_one)

@@ -1,6 +1,7 @@
 require "test_helper"
 
 class QuestionTest < ActiveSupport::TestCase
+  fixtures :categories, :clinical_cases, :players
   # Associations
   test "should belong to clinical_case" do
     q = Question.new

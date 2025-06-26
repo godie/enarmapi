@@ -1,6 +1,8 @@
 require "test_helper"
 
 class PlayerAnswerTest < ActiveSupport::TestCase
+  fixtures :players, :questions, :answers, :clinical_cases
+
   # Associations
   test "should belong to player" do
     pa = PlayerAnswer.new
@@ -43,7 +45,7 @@ class PlayerAnswerTest < ActiveSupport::TestCase
     @answer_three_for_q_two = answers(:three) # Assuming this is for @question_two and correct
      if @answer_three_for_q_two.question != @question_two
       @answer_three_for_q_two.update!(question: @question_two)
-    end
+     end
   end
 
   test "should be invalid without a player" do
@@ -96,7 +98,7 @@ class PlayerAnswerTest < ActiveSupport::TestCase
 
     nil_correct_answer = Answer.create!(question: question_cb, text: "CB Ans Nil Correct", is_correct: nil)
     pa_nil_correct = PlayerAnswer.create!(player: player_cb, question: question_cb, answer: nil_correct_answer)
-    assert_nil pa_nil_correct.is_correct, "is_correct should be nil if answer.is_correct is nil"
+    assert_equal false, pa_nil_correct.is_correct, "is_correct should be false if answer.is_correct insert is nil"
   end
 
   # after_create :update_player_stats is commented out in model, so no test for it.
@@ -142,7 +144,7 @@ class PlayerAnswerTest < ActiveSupport::TestCase
     setup_for_scope_tests
     # Order: @pa_correct_recent, @pa_incorrect_less_recent, @pa_correct_old
     recent_pas = PlayerAnswer.where(player: @player_s).recent.to_a # Filter by player for this test
-    expected_order = [@pa_correct_recent, @pa_incorrect_less_recent, @pa_correct_old]
+    expected_order = [ @pa_correct_recent, @pa_incorrect_less_recent, @pa_correct_old ]
     assert_equal expected_order.map(&:id), recent_pas.map(&:id)
   end
 

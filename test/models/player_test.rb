@@ -1,6 +1,7 @@
 require "test_helper"
 
 class PlayerTest < ActiveSupport::TestCase
+  fixtures :players, :categories
   # Associations
   test "should have many player_answers" do
     player = Player.new
@@ -53,16 +54,16 @@ class PlayerTest < ActiveSupport::TestCase
   test "email should allow valid formats and be blankable" do
     player_valid_email = Player.new(facebook_id: "fb_email_test_#{SecureRandom.hex(3)}")
 
-    valid_emails = ["user@example.com", "USER@example.com", "a.user.name@subdomain.example.co.uk", nil, ""]
+    valid_emails = [ "user@example.com", "USER@example.com", "a.user.name@subdomain.example.co.uk", nil, "" ]
     valid_emails.each do |email|
       player_valid_email.email = email
       assert player_valid_email.valid?, "#{email.inspect} should be a valid email or blankable. Errors: #{player_valid_email.errors.full_messages.join(", ")}"
     end
 
-    invalid_emails = ["user@example", "user_at_example.com", "user@.com"]
+    invalid_emails = [ "user@example", "user_at_example.com", "user@.com" ]
     invalid_emails.each do |email|
       player_valid_email.email = email
-      assert_not player_valid_email.valid?, "#{email.inspect} should be an invalid email format."
+      assert_not player_valid_email.valid?, "#{player_valid_email.email.inspect} should be an invalid email format."
       assert_includes player_valid_email.errors[:email], "is invalid"
     end
   end

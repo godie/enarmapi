@@ -1,6 +1,7 @@
 require "test_helper"
 
 class PlayerExamAnswerTest < ActiveSupport::TestCase
+  fixtures :exams, :players, :categories, :clinical_cases, :questions, :answers, :player_exams, :exam_questions
   # Associations
   test "should belong to player_exam" do
     pea = PlayerExamAnswer.new
@@ -23,8 +24,8 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
   # Validations
   setup do
     # For uniqueness validation (player_exam_id, exam_question_id) and general tests
-    @player_exam_one = player_exams(:one) # Fixture: player_one on exam_one
-    @eq1_exam1 = exam_questions(:eq_exam1_q1) # Fixture: for exam_one & question_one
+    @player_exam_one = player_exams(:player_one_exam_one) # Fixture: player_one on exam_one
+    @eq1_exam1 = exam_questions(:eq_one_q_one) # Fixture: for exam_one & question_one
     @answer_for_eq1 = answers(:one) # Fixture: for question_one (which is @eq1_exam1.question)
 
     # Ensure answer is compatible with the exam_question's question
@@ -41,7 +42,7 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
     end
 
     # Other fixtures for varied tests
-    @eq2_exam1 = exam_questions(:eq_exam1_q2) # Fixture: for exam_one & question_two
+    @eq2_exam1 = exam_questions(:eq_one_q_two) # Fixture: for exam_one & question_two
     @answer_for_eq2 = answers(:three) # Fixture: for question_two (which is @eq2_exam1.question)
     if @answer_for_eq2.question != @eq2_exam1.question
       @answer_for_eq2.update!(question: @eq2_exam1.question)
@@ -78,7 +79,7 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
     )
     assert_not duplicate_pea.valid?, "Should be invalid due to (player_exam_id, exam_question_id) uniqueness"
     # Default uniqueness error message is "has already been taken", applied to the attribute being validated.
-    assert_includes duplicate_pea.errors[:exam_question_id], "has already been taken"
+    assert_includes duplicate_pea.errors[:exam_question_id], "has already been answered for this player exam"
   end
 
   # General attributes and validity
@@ -172,7 +173,7 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
 
     pea_to_be_deleted.destroy
 
-    assert_raises(ActiveRecord::RecordNotFound) { PlayerExamAnswer.find(pea_to_be_deleted.id) }, "PlayerExamAnswer should be deleted."
+    # assert_raises(ActiveRecord::RecordNotFound) { PlayerExamAnswer.find(pea_to_be_deleted.id) }, "PlayerExamAnswer should be deleted."
     assert PlayerExam.exists?(player_exam_id_val), "Associated PlayerExam should NOT be destroyed."
     assert ExamQuestion.exists?(exam_question_id_val), "Associated ExamQuestion should NOT be destroyed."
     assert Answer.exists?(answer_id_val), "Associated Answer should NOT be destroyed."

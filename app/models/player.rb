@@ -1,4 +1,6 @@
 class Player < ApplicationRecord
+  VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
+
   has_many :player_answers
   has_many :practiced_questions, through: :player_answers, source: :question
   has_many :answers, through: :player_answers
@@ -7,7 +9,7 @@ class Player < ApplicationRecord
 
   # Validaciones
   validates :facebook_id, presence: true, uniqueness: true
-  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :email, format: { with: VALID_EMAIL_REGEX }, allow_blank: true
 
   # Métodos de estadísticas
   def stats
@@ -32,6 +34,10 @@ class Player < ApplicationRecord
 
   def answer_for(question)
     player_answers.find_by(question: question)
+  end
+
+  def answered_questions
+    Question.joins(:player_answers).where(player_answers: { player_id: id })
   end
 
   # Para práctica - obtener preguntas no respondidas

@@ -3,6 +3,7 @@
 admin:
   name: Admin User
   email: admin@example.com
+  username: Admin User
   password_digest: <%= BCrypt::Password.create('password') %>
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
@@ -10,12 +11,14 @@ admin:
 user_one:
   name: User One
   email: userone@example.com
+  username: User One
   password_digest: <%= BCrypt::Password.create('password') %>
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 
 user_two:
   name: User Two
+  username: User Two
   email: usertwo@example.com
   password_digest: <%= BCrypt::Password.create('password') %>
   created_at: <%= Time.zone.now %>

@@ -1,6 +1,7 @@
 require "test_helper"
 
 class PlayerExamTest < ActiveSupport::TestCase
+  fixtures :players, :exams, :exam_questions, :answers
   # Associations
   test "should belong to player" do
     pe = PlayerExam.new
@@ -27,7 +28,7 @@ class PlayerExamTest < ActiveSupport::TestCase
 
   # Validations
   test "should be invalid without a player" do
-    player_exam = PlayerExam.new(exam: exams(:one))
+    player_exam = PlayerExam.new(exam: exams(:exam_one))
     assert_not player_exam.valid?, "PlayerExam should be invalid without a player"
     assert_includes player_exam.errors[:player], "must exist"
   end
@@ -42,12 +43,12 @@ class PlayerExamTest < ActiveSupport::TestCase
   # General setup for tests that don't need isolated scope/method data
   setup do
     @player_one_fix = players(:player_one)
-    @exam_one_fix = exams(:one) # Fixture: "Cardiology Basics"
+    @exam_one_fix = exams(:exam_one) # Fixture: "Cardiology Basics"
     # exam_questions.yml links to @exam_one_fix:
     # eq_exam1_q1 (q: questions(:one), points: 10)
     # eq_exam1_q2 (q: questions(:two), points: 5)
-    @eq1_for_exam1_fix = exam_questions(:eq_exam1_q1)
-    @eq2_for_exam1_fix = exam_questions(:eq_exam1_q2)
+    @eq1_for_exam1_fix = exam_questions(:eq_one_q_one)
+    @eq2_for_exam1_fix = exam_questions(:eq_one_q_two)
 
     @ans_for_eq1_q_fix = answers(:one) # For questions(:one)
     @ans_for_eq2_q_fix = answers(:three) # For questions(:two)
@@ -121,7 +122,7 @@ class PlayerExamTest < ActiveSupport::TestCase
   def setup_for_calculate_score_test
     @player_cs = Player.create!(facebook_id: "fb_pe_cs_#{SecureRandom.hex(3)}")
     # Use an exam with known ExamQuestions and points
-    @exam_cs = exams(:one) # This exam has @eq1_for_exam1_fix (10 pts) and @eq2_for_exam1_fix (5 pts)
+    @exam_cs = exams(:exam_one) # This exam has @eq1_for_exam1_fix (10 pts) and @eq2_for_exam1_fix (5 pts)
     @player_exam_for_calc_score = PlayerExam.create!(player: @player_cs, exam: @exam_cs)
   end
 

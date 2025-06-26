@@ -5,7 +5,7 @@ class PlayerExam < ApplicationRecord
   has_many :exam_questions, through: :exam
 
   scope :complete, -> { where(status: "completed") }
-  scope :in_progress, -> { where(la "in_progress") }
+  scope :in_progress, -> { where(status: "in_progress") }
 
   def calculate_score
     player_exam_answers.sum(:points_earned)

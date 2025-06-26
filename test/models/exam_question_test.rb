@@ -1,6 +1,7 @@
 require "test_helper"
 
 class ExamQuestionTest < ActiveSupport::TestCase
+  fixtures :exams, :questions, :categories, :clinical_cases, :exam_questions
   # Associations
   test "should belong to exam" do
     eq = ExamQuestion.new
@@ -24,16 +25,10 @@ class ExamQuestionTest < ActiveSupport::TestCase
   # Validations
   setup do
     # For uniqueness validation and general tests
-    @exam_one = exams(:one)
+    @exam_one = exams(:exam_one)
+    @exam_two = exams(:exam_two)
     @question_one = questions(:one)
     @question_two = questions(:two) # Another question for the same exam
-
-    # Create an existing ExamQuestion for uniqueness testing
-    # This one uses @exam_one and @question_one
-    ExamQuestion.find_or_create_by!(exam: @exam_one, question: @question_one) do |eq_setup|
-      eq_setup.position = 1
-      eq_setup.points = 10
-    end
   end
 
   test "should be invalid without an exam" do
@@ -49,17 +44,26 @@ class ExamQuestionTest < ActiveSupport::TestCase
   end
 
   test "question_id must be unique scoped to exam_id" do
+    test_exam = Exam.create!(name: "Unique Test Exam #{SecureRandom.hex(4)}")
+    test_question = Question.create!(text: "Unique Test Question #{SecureRandom.hex(4)}", clinical_case: clinical_cases(:one))
+    valid_exam_question = ExamQuestion.create!(
+      exam: test_exam,
+      question: test_question,
+      position: 1,
+      points: 10
+    )
+    assert valid_exam_question.persisted?, "Failed to create initial valid exam_question: #{valid_exam_question.errors.full_messages.join(', ')}"
     # An ExamQuestion with @exam_one and @question_one already exists from setup.
     duplicate_exam_question = ExamQuestion.new(
-      exam: @exam_one,       # Same exam
-      question: @question_one, # Same question
+      exam: test_exam,       # Same exam
+      question: test_question, # Same question
       position: 2,           # Different position, but should still fail on (exam, question) uniqueness
       points: 20
     )
     assert_not duplicate_exam_question.valid?, "Should not be valid due to (exam_id, question_id) uniqueness constraint"
     # Default message for uniqueness is "has already been taken".
     # It applies to the attribute being validated for uniqueness within the scope.
-    assert_includes duplicate_exam_question.errors[:question_id], "has already been taken"
+    assert_includes duplicate_exam_question.errors[:question_id], "has already been added to this exam"
   end
 
   # General attributes and validity
@@ -67,8 +71,8 @@ class ExamQuestionTest < ActiveSupport::TestCase
     # Use a combination not used in setup for uniqueness to ensure this one is valid on its own.
     # @exam_one and @question_two combination.
     exam_question = ExamQuestion.new(
-      exam: @exam_one,
-      question: @question_two, # Different question for the same exam
+      exam: @exam_two,
+      question: @question_one, # Different question for the same exam
       position: 1,
       points: 10
     )
@@ -77,7 +81,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
 
   test "position attribute can be nil (if schema allows and no model validation)" do
     # Schema: t.integer "position" (nullable)
-    exam_question = ExamQuestion.new(exam: @exam_one, question: @question_two, points: 5, position: nil)
+    exam_question = ExamQuestion.new(exam: @exam_two, question: @question_two, points: 5, position: nil)
     assert exam_question.valid?, "Position being nil should be valid. Errors: #{exam_question.errors.full_messages.join(", ")}"
     assert exam_question.save
     assert_nil exam_question.reload.position
@@ -85,7 +89,9 @@ class ExamQuestionTest < ActiveSupport::TestCase
 
   test "points attribute can be nil (if schema allows and no model validation)" do
     # Schema: t.integer "points" (nullable)
-    exam_question = ExamQuestion.new(exam: @exam_one, question: @question_two, position: 1, points: nil)
+    test_exam_for_nil_points = Exam.create!(name: "Nil Points Exam")
+    test_question_for_nil_points = Question.create!(text: "Nil Points Question", clinical_case: clinical_cases(:one))
+    exam_question = ExamQuestion.new(exam: test_exam_for_nil_points, question: test_question_for_nil_points, position: 1, points: nil)
     assert exam_question.valid?, "Points being nil should be valid. Errors: #{exam_question.errors.full_messages.join(", ")}"
     assert exam_question.save
     assert_nil exam_question.reload.points
@@ -95,7 +101,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
     # Create fresh, un-fixture records for this specific test to avoid side effects.
     test_exam = Exam.create!(name: "EQ Deletion Test - Exam")
     # Ensure clinical_case exists for the question
-    cc = clinical_cases(:one) ? clinical_cases(:one) : ClinicalCase.create!(name: "Temp CC", category: categories(:one), description:"d")
+    cc = clinical_cases(:one) ? clinical_cases(:one) : ClinicalCase.create!(name: "Temp CC", category: categories(:one), description: "d")
     test_question = Question.create!(text: "EQ Deletion Test - Question", clinical_case: cc)
 
     exam_question_to_delete = ExamQuestion.create!(exam: test_exam, question: test_question, position: 1, points: 5)
@@ -118,7 +124,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
   test "can have associated player_exam_answers" do
     # This test is primarily for the association's existence.
     # More detailed interaction tests would involve PlayerExamAnswer creation.
-    exam_q_from_fixture = exam_questions(:eq_exam1_q1) # from exam_questions.yml
+    exam_q_from_fixture = exam_questions(:eq_one_q_one) # from exam_questions.yml
 
     assert_nothing_raised { exam_q_from_fixture.player_exam_answers.build } # Check if `build` works
 

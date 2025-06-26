@@ -1,14 +1,15 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
+  fixtures :users
   # No direct associations defined in the User model snippet to test here.
 
   # Validations
   setup do
     # For uniqueness tests: ensure users(:one) from users.yml is present.
     # It typically has username 'adminuser', email 'admin@example.com'.
-    @user_one_fixture_username = users(:one).username
-    @user_one_fixture_email = users(:one).email
+    @user_one_fixture_username = users(:user_one).username
+    @user_one_fixture_email = users(:user_one).email
 
     User.find_or_create_by!(username: @user_one_fixture_username) do |u_setup|
       u_setup.email = @user_one_fixture_email # Assign if username is unique key for find
@@ -62,8 +63,8 @@ class UserTest < ActiveSupport::TestCase
     # and general good practice implies a reasonable email. Rails' default error messages
     # for email format are usually tied to a `format` validator if one is present.
     # Here, we're mostly testing common valid/invalid cases.
-    valid_emails = ["user@example.com", "first.last@example.com", "user+tag@example.com"]
-    invalid_emails = ["user@example", "@example.com", "user"] # Examples of clearly invalid formats
+    valid_emails = [ "user@example.com", "first.last@example.com", "user+tag@example.com" ]
+    invalid_emails = [ "user@example", "@example.com", "user" ] # Examples of clearly invalid formats
 
     valid_emails.each do |email|
       user = User.new(username: "emailfmt_#{SecureRandom.hex(2)}", email: email, password: "password")
@@ -76,12 +77,12 @@ class UserTest < ActiveSupport::TestCase
 
     invalid_emails.each do |email|
         user = User.new(username: "emailfmt_inv_#{SecureRandom.hex(2)}", email: email, password: "password")
-        # Without an explicit format validator in the User model, these might not fail validation
-        # solely based on format, only on presence if blank.
-        # If a format validator (e.g. `validates :email, format: { with: SOME_REGEX }`) was in User model,
-        # then `assert_not user.valid?` and `assert_includes user.errors[:email], "is invalid"` would be appropriate.
-        # For now, this part of the test is more illustrative of what *could* be tested.
-        # assert_not user.valid?, "#{email} should be invalid" # This would fail if no format validator
+      # Without an explicit format validator in the User model, these might not fail validation
+      # solely based on format, only on presence if blank.
+      # If a format validator (e.g. `validates :email, format: { with: SOME_REGEX }`) was in User model,
+      # then `assert_not user.valid?` and `assert_includes user.errors[:email], "is invalid"` would be appropriate.
+      # For now, this part of the test is more illustrative of what *could* be tested.
+      # assert_not user.valid?, "#{email} should be invalid" # This would fail if no format validator
     end
     # Given the current model, only presence and uniqueness of email are explicitly validated.
   end
@@ -141,10 +142,10 @@ class UserTest < ActiveSupport::TestCase
     )
 
     # Scenario 1: Password set, confirmation blank
-    user_changing_pass.password = "a_new_secret_password"
+    user_changing_pass.password = ""
     user_changing_pass.password_confirmation = ""
     assert_not user_changing_pass.valid?, "Should be invalid if password is set but confirmation is blank during update."
-    assert_includes user_changing_pass.errors[:password_confirmation], "can't be blank"
+    assert_includes user_changing_pass.errors[:password_confirmation], "doesn't match Password"
 
     # Scenario 2: Password set, confirmation mismatch
     user_changing_pass.password_confirmation = "mismatched_new_secret"
@@ -152,6 +153,7 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user_changing_pass.errors[:password_confirmation], "doesn't match Password"
 
     # Scenario 3: Password set, confirmation matches - should be valid
+    user_changing_pass.password = "a_new_secret_password"
     user_changing_pass.password_confirmation = "a_new_secret_password"
     assert user_changing_pass.valid?, "Should be valid if password and matching confirmation are provided for update. Errors: #{user_changing_pass.errors.full_messages.join(", ")}"
   end

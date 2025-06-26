@@ -1,6 +1,7 @@
 require "test_helper"
 
 class AnswerTest < ActiveSupport::TestCase
+  fixtures :categories, :clinical_cases, :questions, :answers, :players
   # Test associations
   test "should belong to question" do
     answer = Answer.new
@@ -45,7 +46,6 @@ class AnswerTest < ActiveSupport::TestCase
     if @clinical_case_one.category != @category_one
         @clinical_case_one.update!(category: @category_one)
     end
-
   end
 
   test "should be valid with valid attributes (text, is_correct, question)" do
@@ -137,7 +137,7 @@ class AnswerTest < ActiveSupport::TestCase
         question: q_for_nil_desc_ans,
         text: "Answer with text but nil description",
         is_correct: true
-        # description is implicitly nil
+      # description is implicitly nil
     )
     assert answer_with_nil_desc.valid?, "Answer with nil description should be valid. Errors: #{answer_with_nil_desc.errors.full_messages.join(", ")}"
     assert answer_with_nil_desc.save
