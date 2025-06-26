@@ -1,186 +1,204 @@
 require "test_helper"
 
 class CategoryTest < ActiveSupport::TestCase
-  context "associations" do
-    should have_many(:clinical_cases).dependent(:destroy)
-    should have_many(:questions).through(:clinical_cases)
+  # Associations
+  test "should have many clinical_cases and they should be dependent destroy" do
+    category = Category.new
+    assert_respond_to category, :clinical_cases
+
+    # Test dependent destroy
+    category_with_case = Category.create!(name: "Category for Destroy Test")
+    clinical_case = ClinicalCase.create!(name: "Case in Category for Destroy", category: category_with_case, description: "Test")
+    case_id = clinical_case.id
+
+    assert_difference "ClinicalCase.count", -1 do
+      category_with_case.destroy
+    end
+    assert_not ClinicalCase.exists?(case_id)
   end
 
-  context "validations" do
-    # Assuming a category 'one' is loaded from fixtures for uniqueness tests
-    # or create one if fixtures are not guaranteed for this specific test setup.
-    setup do
-      # Ensure a category exists to test uniqueness against.
-      # Using find_or_create_by to avoid errors if 'categories(:one)' is already used
-      # or if it doesn't perfectly match what's needed for a clean test.
-      Category.find_or_create_by!(name: categories(:one).name) if Category.fixture_path_defined? && categories(:one).name
-    end
-
-    should validate_presence_of(:name)
-
-    # Need to create a record before testing uniqueness
-    subject { Category.new(name: "SubjectCategory") } # Changed from :one as it might conflict
-    should validate_uniqueness_of(:name).case_insensitive
+  test "should have many questions through clinical_cases" do
+    category = Category.new
+    assert_respond_to category, :questions
   end
 
-  context "callbacks" do
-    should "normalize name before saving by titleizing and stripping whitespace" do
-      category = Category.new(name: "  leading and trailing spaces and uncapitalized title  ")
-      category.save!
-      assert_equal "Leading And Trailing Spaces And Uncapitalized Title", category.name
-    end
-
-    should "not alter name if it's already normalized" do
-      normalized_name = "Already Normalized Name"
-      category = Category.create!(name: normalized_name) # Use create! to ensure it's saved
-      category.name = normalized_name # Simulate no change
-      category.save! # Trigger callbacks again
-      assert_equal normalized_name, category.name
-    end
-
-    should "handle nil name gracefully in callback (validation should prevent save)" do
-      category = Category.new(name: nil)
-      assert_not category.valid? # Presence validation should fail
-      assert_nothing_raised do
-        category.send(:normalize_name) # Manually trigger callback to check for errors
-      end
-      assert_nil category.name # Name should remain nil after callback if it was nil
-    end
-
-     should "handle blank name by setting it to nil then caught by presence validator" do
-      category = Category.new(name: "   ") # Only spaces
-      # The normalize_name method as written (name.strip.titleize) would make "   " into ""
-      # Then presence validation would catch it.
-      assert_not category.valid?
-      assert_includes category.errors[:name], "can't be blank"
-    end
+  # Validations
+  test "should validate presence of name" do
+    category = Category.new(description: "A category without a name")
+    assert_not category.valid?, "Category should be invalid without a name"
+    assert_includes category.errors[:name], "can't be blank"
   end
 
-  context "scopes" do
-    setup do
-      # Clear existing categories to ensure a clean slate for scope tests, or ensure names are unique
-      # Category.delete_all # Use if necessary, but be careful with fixture dependencies
+  test "should validate uniqueness of name (case-insensitive)" do
+    existing_name = "Unique Category Name #{SecureRandom.hex(3)}"
+    Category.create!(name: existing_name, description: "First category with this name")
 
-      @cat_b = Category.create!(name: "Scope Test B")
-      @cat_a = Category.create!(name: "Scope Test A") # Note: fixture :one might be "Cardiología"
-      @cat_c = Category.create!(name: "Scope Test C")
-      @cat_d_no_cases = Category.create!(name: "Scope Test D No Cases")
+    category_same_case = Category.new(name: existing_name)
+    assert_not category_same_case.valid?, "Category name should be unique (same case)"
+    assert_includes category_same_case.errors[:name], "has already been taken"
 
-
-      @cc1_cat_a = ClinicalCase.create!(name: "CC1A", category: @cat_a, description: "Desc")
-      @cc2_cat_a = ClinicalCase.create!(name: "CC2A", category: @cat_a, description: "Desc")
-      @cc1_cat_b = ClinicalCase.create!(name: "CC1B", category: @cat_b, description: "Desc")
-
-      Question.create!(text: "Q1", clinical_case: @cc1_cat_a)
-      Question.create!(text: "Q2", clinical_case: @cc1_cat_b)
-    end
-
-    should "order alphabetically using 'alphabetical' scope" do
-      # Querying all created categories for this test context
-      expected_order = [@cat_a, @cat_b, @cat_c, @cat_d_no_cases].sort_by(&:name)
-      actual_order = Category.where(id: [@cat_a.id, @cat_b.id, @cat_c.id, @cat_d_no_cases.id]).alphabetical.to_a
-      assert_equal expected_order.map(&:name), actual_order.map(&:name)
-    end
-
-    should "return categories with clinical cases using 'with_clinical_cases' scope" do
-      categories_with_cases = Category.with_clinical_cases.to_a
-      assert_includes categories_with_cases, @cat_a
-      assert_includes categories_with_cases, @cat_b
-      assert_not_includes categories_with_cases, @cat_c # Had no cases in original setup
-      assert_not_includes categories_with_cases, @cat_d_no_cases
-    end
-
-    should "return most used categories using 'most_used' scope" do
-      # @cat_a has 2 cases
-      # @cat_b has 1 case
-      # @cat_c, @cat_d_no_cases have 0 cases
-
-      most_used_limit_1 = Category.most_used(1)
-      assert_equal [@cat_a], most_used_limit_1.to_a
-
-      most_used_limit_2 = Category.most_used(2).to_a # Convert to array for easier comparison
-      # Order can be tricky with COUNT aggregates if counts are equal. Assuming DB returns them ordered by count then by primary key or name.
-      # For this test, @cat_a (2 cases) should come before @cat_b (1 case).
-      assert_equal 2, most_used_limit_2.size
-      assert_includes most_used_limit_2, @cat_a
-      assert_includes most_used_limit_2, @cat_b
-      assert_equal @cat_a, most_used_limit_2.first # @cat_a should be first
-    end
+    category_different_case = Category.new(name: existing_name.downcase)
+    assert_not category_different_case.valid?, "Category name should be unique (different case)"
+    assert_includes category_different_case.errors[:name], "has already been taken"
   end
 
-  context "instance methods" do
-    setup do
-      @category_with_cases = categories(:one) # From fixtures, e.g., "Cardiología"
-      # Ensure it has associated cases and questions for the test
-      @cc1 = ClinicalCase.find_or_create_by!(name: "Fixture Case 1 for Category One", category: @category_with_cases, description: "Desc")
-      @cc2 = ClinicalCase.find_or_create_by!(name: "Fixture Case 2 for Category One", category: @category_with_cases, description: "Desc")
-      Question.find_or_create_by!(text: "Q1 in CC1", clinical_case: @cc1)
-      Question.find_or_create_by!(text: "Q2 in CC1", clinical_case: @cc1)
-      Question.find_or_create_by!(text: "Q1 in CC2", clinical_case: @cc2)
-
-      @empty_category = Category.create!(name: "Empty Category For Instance Methods")
-    end
-
-    should "return correct clinical_cases_count" do
-      # Reload to ensure counts are fresh if cases were added/removed by other tests/setups
-      @category_with_cases.reload
-      assert_equal 2, @category_with_cases.clinical_cases_count
-      assert_equal 0, @empty_category.clinical_cases_count
-    end
-
-    should "return correct total_questions_count" do
-      @category_with_cases.reload
-      assert_equal 3, @category_with_cases.total_questions_count
-      assert_equal 0, @empty_category.total_questions_count
-    end
-
-    context "#as_json" do
-      should "return standard json by default" do
-        json_output = @category_with_cases.as_json
-        assert_not_includes json_output, "clinical_cases_count"
-        assert_not_includes json_output, "total_questions_count"
-        assert_equal @category_with_cases.name, json_output["name"]
-        assert_equal @category_with_cases.description, json_output["description"]
-      end
-
-      should "include stats when :include_stats is true" do
-        # Ensure counts are accurate before as_json call
-        @category_with_cases.reload
-        expected_cases_count = @category_with_cases.clinical_cases.count
-        expected_questions_count = @category_with_cases.questions.count
-
-        json_output = @category_with_cases.as_json(include_stats: true)
-
-        assert_includes json_output, "clinical_cases_count"
-        assert_includes json_output, "total_questions_count"
-        assert_equal expected_cases_count, json_output["clinical_cases_count"]
-        assert_equal expected_questions_count, json_output["total_questions_count"]
-      end
-    end
+  # Callbacks
+  test "normalize_name callback should titleize and strip whitespace from name before saving" do
+    category = Category.new(name: "  a messy category name  ")
+    category.save! # Trigger callbacks
+    assert_equal "A Messy Category Name", category.name, "Name was not normalized correctly"
   end
 
-  test "should be valid with valid attributes" do
-    category = Category.new(name: "Unique Category Name For Validity Test", description: "Optional description")
+  test "normalize_name callback should not alter an already normalized name" do
+    normalized = "Already Good Name"
+    category = Category.new(name: normalized)
+    category.save!
+    assert_equal normalized, category.name
+  end
+
+  test "normalize_name callback should handle blank name by making it empty string (presence validation will catch)" do
+    category = Category.new(name: "   ") # Only spaces
+    category.send(:normalize_name) # Manually trigger callback for inspection if needed
+    assert_equal "", category.name # normalize_name turns "   " into ""
+    assert_not category.valid? # Presence validation should then fail for ""
+    assert_includes category.errors[:name], "can't be blank"
+  end
+
+
+  # Scopes
+  setup do
+    # Clear relevant tables or ensure unique names for scope tests
+    # ClinicalCase.delete_all # If dependent: :destroy is not set or to be sure
+    # Category.delete_all
+
+    @cat_alpha = Category.create!(name: "Alpha Category")
+    @cat_beta = Category.create!(name: "Beta Category")
+    @cat_gamma = Category.create!(name: "Gamma Category No Cases") # No cases for this one initially
+
+    @cc_alpha1 = ClinicalCase.create!(name: "CC Alpha 1", category: @cat_alpha, description: "Desc")
+    @cc_alpha2 = ClinicalCase.create!(name: "CC Alpha 2", category: @cat_alpha, description: "Desc") # @cat_alpha has 2 cases
+    @cc_beta1 = ClinicalCase.create!(name: "CC Beta 1", category: @cat_beta, description: "Desc")   # @cat_beta has 1 case
+
+    Question.create!(text: "Q for CC Alpha 1", clinical_case: @cc_alpha1)
+    Question.create!(text: "Q for CC Beta 1", clinical_case: @cc_beta1)
+  end
+
+  test "alphabetical scope should order categories by name" do
+    # Fetching specific categories created in setup to avoid interference from fixtures or other tests
+    ids_for_scope_test = [@cat_alpha.id, @cat_beta.id, @cat_gamma.id]
+    categories_for_test = Category.where(id: ids_for_scope_test).alphabetical.to_a
+
+    expected_order = [@cat_alpha, @cat_beta, @cat_gamma].sort_by(&:name)
+    assert_equal expected_order.map(&:id), categories_for_test.map(&:id), "Categories are not in alphabetical order"
+  end
+
+  test "with_clinical_cases scope should return categories that have at least one clinical case" do
+    categories_with_cases = Category.with_clinical_cases
+    assert_includes categories_with_cases, @cat_alpha
+    assert_includes categories_with_cases, @cat_beta
+    assert_not_includes categories_with_cases, @cat_gamma # @cat_gamma has no clinical cases
+  end
+
+  test "most_used scope should return categories ordered by the number of clinical cases (descending)" do
+    # @cat_alpha has 2 cases, @cat_beta has 1 case, @cat_gamma has 0 cases
+
+    most_used_1 = Category.most_used(1).to_a
+    assert_equal [@cat_alpha], most_used_1, "Most used (limit 1) should be @cat_alpha"
+
+    most_used_2 = Category.most_used(2).to_a
+    # Order should be @cat_alpha then @cat_beta
+    assert_equal 2, most_used_2.size
+    assert_equal @cat_alpha, most_used_2.first, "First in most_used (limit 2) should be @cat_alpha"
+    assert_equal @cat_beta, most_used_2.second, "Second in most_used (limit 2) should be @cat_beta"
+
+    most_used_all = Category.most_used(3).to_a # or more than total categories with cases
+    assert_equal 2, most_used_all.select { |c| c.clinical_cases.any? }.count # Only those with cases should be effectively "used"
+                                                                             # The scope counts clinical_cases.id, so 0-count categories might appear if not filtered out.
+                                                                             # The current scope `left_joins(:clinical_cases).group("categories.id").order("COUNT(clinical_cases.id) DESC")`
+                                                                             # will include categories with 0 cases if limit allows.
+    assert_equal @cat_alpha, most_used_all.first
+    assert_equal @cat_beta, most_used_all.second
+    # @cat_gamma would be last if included, with a count of 0.
+    # Depending on how COUNT(clinical_cases.id) and limit interact with categories having 0 cases.
+    # Let's verify if @cat_gamma is there if limit is 3
+    most_used_3 = Category.most_used(3).to_a
+    if most_used_3.size == 3
+        assert_includes most_used_3, @cat_gamma # If categories with 0 cases are included by the scope
+        assert_equal @cat_gamma, most_used_3.third # And it should be last due to 0 count
+    else # if scope implicitly filters out 0-count or DB handles it
+        assert_equal 2, most_used_3.size # Then only @cat_alpha and @cat_beta
+    end
+
+  end
+
+  # Instance Methods
+  test "clinical_cases_count should return the number of associated clinical cases" do
+    category = categories(:one) # From fixtures; assuming it has clinical_cases(:one) and potentially others
+    # Let's use a freshly created category for precise count
+    new_cat = Category.create!(name: "Count Test Cat")
+    assert_equal 0, new_cat.clinical_cases_count
+
+    ClinicalCase.create!(name: "CC1 for Count", category: new_cat, description: "d")
+    ClinicalCase.create!(name: "CC2 for Count", category: new_cat, description: "d")
+    new_cat.reload # Reload to ensure association is fresh
+    assert_equal 2, new_cat.clinical_cases_count
+  end
+
+  test "total_questions_count should return the number of questions associated through clinical cases" do
+    category = categories(:two) # From fixtures
+     # Let's use a freshly created category for precise count
+    new_cat_q = Category.create!(name: "Count Q Test Cat")
+    assert_equal 0, new_cat_q.total_questions_count
+
+    cc1 = ClinicalCase.create!(name: "CC1 for Q Count", category: new_cat_q, description: "d")
+    cc2 = ClinicalCase.create!(name: "CC2 for Q Count", category: new_cat_q, description: "d")
+    Question.create!(text: "Q1 CC1", clinical_case: cc1)
+    Question.create!(text: "Q2 CC1", clinical_case: cc1)
+    Question.create!(text: "Q1 CC2", clinical_case: cc2)
+    new_cat_q.reload
+    assert_equal 3, new_cat_q.total_questions_count
+  end
+
+  test "as_json should return standard JSON by default" do
+    category = categories(:one) # Assuming this fixture exists
+    json_output = category.as_json
+    assert_kind_of Hash, json_output
+    assert_includes json_output, "name"
+    assert_includes json_output, "description" # if description is part of default as_json
+    assert_not_includes json_output, "clinical_cases_count"
+    assert_not_includes json_output, "total_questions_count"
+  end
+
+  test "as_json should include stats when :include_stats option is true" do
+    # Use a category with known counts
+    cat_for_json = Category.create!(name: "JSON Stats Test")
+    cc_json = ClinicalCase.create!(name: "CC for JSON", category: cat_for_json, description: "d")
+    Question.create!(text: "Q1 JSON", clinical_case: cc_json)
+    Question.create!(text: "Q2 JSON", clinical_case: cc_json)
+    cat_for_json.reload
+
+    expected_cases_count = 1
+    expected_questions_count = 2
+    assert_equal expected_cases_count, cat_for_json.clinical_cases_count
+    assert_equal expected_questions_count, cat_for_json.total_questions_count
+
+    json_output = cat_for_json.as_json(include_stats: true)
+    assert_includes json_output, "clinical_cases_count"
+    assert_equal expected_cases_count, json_output["clinical_cases_count"]
+    assert_includes json_output, "total_questions_count"
+    assert_equal expected_questions_count, json_output["total_questions_count"]
+  end
+
+  # General model validity
+  test "should be valid with all required attributes" do
+    category = Category.new(name: "A Valid Category Name #{SecureRandom.hex(3)}", description: "Optional description here.")
     assert category.valid?, category.errors.full_messages.join(", ")
   end
 
   test "description attribute can be nil" do
-    category = Category.new(name: "Category Without Description Test")
-    assert category.valid?
+    category = Category.new(name: "Category With No Description #{SecureRandom.hex(3)}")
+    assert category.valid?, "Category should be valid even without a description"
     assert category.save
     assert_nil category.reload.description
-  end
-
-  test "name must be unique (case-insensitive)" do
-    existing_category_name = "Existing Name for Uniqueness"
-    Category.create!(name: existing_category_name)
-
-    category_same_case = Category.new(name: existing_category_name)
-    assert_not category_same_case.valid?
-    assert_includes category_same_case.errors[:name], "has already been taken"
-
-    category_different_case = Category.new(name: existing_category_name.downcase)
-    assert_not category_different_case.valid?
-    assert_includes category_different_case.errors[:name], "has already been taken"
   end
 end

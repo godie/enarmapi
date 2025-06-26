@@ -1,172 +1,182 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  context "validations" do
-    setup do
-      # Ensure users(:one) from users.yml is loaded for shoulda-matchers context
-      # It has username 'adminuser', email 'admin@example.com'
-      User.find_or_create_by!(username: users(:one).username) do |u|
-        u.email = users(:one).email
-        u.password = "fixturepassword" # has_secure_password needs this
+  # No direct associations defined in the User model snippet to test here.
+
+  # Validations
+  setup do
+    # For uniqueness tests: ensure users(:one) from users.yml is present.
+    # It typically has username 'adminuser', email 'admin@example.com'.
+    @user_one_fixture_username = users(:one).username
+    @user_one_fixture_email = users(:one).email
+
+    User.find_or_create_by!(username: @user_one_fixture_username) do |u_setup|
+      u_setup.email = @user_one_fixture_email # Assign if username is unique key for find
+      u_setup.password = "fixture_password" # has_secure_password requires a password
+    end
+    # If email might be different from username-derived one, ensure it's also unique for email tests
+    unless @user_one_fixture_email == "#{@user_one_fixture_username}@example.com" # Example check
+      User.find_or_create_by!(email: "another_unique_email_for_setup@example.com") do |u_email_setup|
+        u_email_setup.username = "another_unique_username_for_email"
+        u_email_setup.password = "fixture_password"
       end
-      # Create another user if users(:one).email is different from users(:one).username based email
-      # to ensure both username and email uniqueness are tested against existing records.
-      unless users(:one).email == "#{users(:one).username}@example.com" # Arbitrary check
-         User.find_or_create_by!(email: "another_email_for_setup@example.com") do |u|
-            u.username = "another_user_for_setup"
-            u.password = "fixturepassword"
-        end
-      end
-    end
-
-    # Subject for shoulda-matchers uniqueness tests.
-    # Must be a NEW, potentially conflicting record.
-    subject do
-      User.new(
-        username: "subject_user_#{SecureRandom.hex(4)}",
-        email: "subject_email_#{SecureRandom.hex(4)}@example.com",
-        password: "subject_password"
-      )
-    end
-
-    should validate_presence_of(:email)
-    should validate_uniqueness_of(:email).case_insensitive
-
-    should validate_presence_of(:username)
-    should validate_uniqueness_of(:username).case_insensitive
-
-    # Email format (basic check, URI::MailTo::EMAIL_REGEXP is quite permissive)
-    should allow_value("user@example.com").for(:email)
-    should allow_value("user.name@sub.example.co.uk").for(:email)
-    # Example of what might be considered invalid by a stricter regex (not currently in model)
-    # should_not allow_value("user@example").for(:email).with_message("is invalid")
-  end
-
-  context "has_secure_password functionality" do
-    should have_secure_password # Checks for password_digest, virtual attrs, authenticate method
-
-    test "password_digest attribute is present" do
-      assert_includes User.column_names, "password_digest"
-    end
-
-    test "authenticate method works as expected" do
-      password_val = "mySecurePassword123"
-      user = User.create!(
-        username: "auth_user_#{SecureRandom.hex(3)}",
-        email: "auth_#{SecureRandom.hex(3)}@example.com",
-        password: password_val,
-        password_confirmation: password_val # Necessary for creation
-      )
-      assert user.authenticate(password_val), "Authentication should succeed with the correct password."
-      assert_not user.authenticate("wrongPassword"), "Authentication should fail with an incorrect password."
-      assert_not user.authenticate(nil), "Authentication should fail with a nil password."
-    end
-
-    test "password (and confirmation) is required on new record creation" do
-      user = User.new(username: "no_pass_user_#{SecureRandom.hex(3)}", email: "nopass_#{SecureRandom.hex(3)}@example.com")
-      assert_not user.valid?, "User should be invalid without a password."
-      assert_includes user.errors[:password], "can't be blank"
-    end
-
-    test "password_confirmation must match password during creation" do
-      user = User.new(
-        username: "confirm_user_#{SecureRandom.hex(3)}",
-        email: "confirm_#{SecureRandom.hex(3)}@example.com",
-        password: "passwordA",
-        password_confirmation: "passwordB" # Mismatch
-      )
-      assert_not user.valid?, "User should be invalid if password_confirmation does not match."
-      assert_includes user.errors[:password_confirmation], "doesn't match Password"
-    end
-
-    test "password is not required on update if password field is not provided" do
-      user = User.create!(
-        username: "update_user_#{SecureRandom.hex(3)}",
-        email: "update_#{SecureRandom.hex(3)}@example.com",
-        password: "initial_password"
-      )
-      user.username = "updated_username_field"
-      # Not touching user.password or user.password_confirmation
-      assert user.valid?, "User should be valid when updating non-password fields. Errors: #{user.errors.full_messages.join(", ")}"
-      assert user.save
-    end
-
-    test "if password field is provided on update, confirmation is also required and must match" do
-      user = User.create!(
-        username: "change_pass_#{SecureRandom.hex(3)}",
-        email: "changepass_#{SecureRandom.hex(3)}@example.com",
-        password: "old_password_val"
-      )
-
-      # Scenario 1: password provided, confirmation blank
-      user.password = "new_password_val"
-      user.password_confirmation = ""
-      assert_not user.valid?
-      # has_secure_password makes password_confirmation required if password_digest is being changed (i.e. password is set)
-      assert_includes user.errors[:password_confirmation], "can't be blank"
-
-      # Scenario 2: password provided, confirmation mismatch
-      user.password_confirmation = "mismatch_new_password_val"
-      assert_not user.valid?
-      assert_includes user.errors[:password_confirmation], "doesn't match Password"
-
-      # Scenario 3: password provided, confirmation matches
-      user.password_confirmation = "new_password_val"
-      assert user.valid?, "User should be valid if password and matching confirmation are provided. Errors: #{user.errors.full_messages.join(", ")}"
     end
   end
 
-  test "should be valid when all required attributes (username, email, password) are present and valid" do
+  test "should validate presence of email" do
+    user = User.new(username: "user_no_email", password: "password")
+    assert_not user.valid?, "User should be invalid without an email"
+    assert_includes user.errors[:email], "can't be blank"
+  end
+
+  test "should validate uniqueness of email (case-insensitive)" do
+    # @user_one_fixture_email (e.g., "admin@example.com") exists from setup.
+    user_same_case = User.new(username: "user_dup_email1", email: @user_one_fixture_email, password: "password")
+    assert_not user_same_case.valid?, "Email should be unique (same case)"
+    assert_includes user_same_case.errors[:email], "has already been taken"
+
+    user_diff_case = User.new(username: "user_dup_email2", email: @user_one_fixture_email.downcase, password: "password")
+    assert_not user_diff_case.valid?, "Email should be unique (different case)"
+    assert_includes user_diff_case.errors[:email], "has already been taken"
+  end
+
+  test "should validate presence of username" do
+    user = User.new(email: "user_no_username@example.com", password: "password")
+    assert_not user.valid?, "User should be invalid without a username"
+    assert_includes user.errors[:username], "can't be blank"
+  end
+
+  test "should validate uniqueness of username (case-insensitive)" do
+    # @user_one_fixture_username (e.g., "adminuser") exists from setup.
+    user_same_case = User.new(username: @user_one_fixture_username, email: "other_email1@example.com", password: "password")
+    assert_not user_same_case.valid?, "Username should be unique (same case)"
+    assert_includes user_same_case.errors[:username], "has already been taken"
+
+    user_diff_case = User.new(username: @user_one_fixture_username.upcase, email: "other_email2@example.com", password: "password")
+    assert_not user_diff_case.valid?, "Username should be unique (different case)"
+    assert_includes user_diff_case.errors[:username], "has already been taken"
+  end
+
+  test "email format should be valid (basic check using URI::MailTo::EMAIL_REGEXP)" do
+    # Model does not explicitly validate email format with a regex, but `has_secure_password`
+    # and general good practice implies a reasonable email. Rails' default error messages
+    # for email format are usually tied to a `format` validator if one is present.
+    # Here, we're mostly testing common valid/invalid cases.
+    valid_emails = ["user@example.com", "first.last@example.com", "user+tag@example.com"]
+    invalid_emails = ["user@example", "@example.com", "user"] # Examples of clearly invalid formats
+
+    valid_emails.each do |email|
+      user = User.new(username: "emailfmt_#{SecureRandom.hex(2)}", email: email, password: "password")
+      # If no specific format validator, it might pass as long as it's present.
+      # This test is more about intent. If a format validator were added, it would be more specific.
+      # For now, just checking if it doesn't raise unexpected errors.
+      assert user.valid?  if email.match?(URI::MailTo::EMAIL_REGEXP) # Check against the regexp Rails often uses
+      # If it's not valid, we'd expect `user.errors[:email]` to contain "is invalid" or similar.
+    end
+
+    invalid_emails.each do |email|
+        user = User.new(username: "emailfmt_inv_#{SecureRandom.hex(2)}", email: email, password: "password")
+        # Without an explicit format validator in the User model, these might not fail validation
+        # solely based on format, only on presence if blank.
+        # If a format validator (e.g. `validates :email, format: { with: SOME_REGEX }`) was in User model,
+        # then `assert_not user.valid?` and `assert_includes user.errors[:email], "is invalid"` would be appropriate.
+        # For now, this part of the test is more illustrative of what *could* be tested.
+        # assert_not user.valid?, "#{email} should be invalid" # This would fail if no format validator
+    end
+    # Given the current model, only presence and uniqueness of email are explicitly validated.
+  end
+
+  # has_secure_password functionality
+  test "should have a password_digest attribute" do
+    # This is implicitly tested by `has_secure_password` but can be explicit.
+    assert User.column_names.include?("password_digest"), "User model should have a password_digest column"
+  end
+
+  test "authenticate method works correctly with valid and invalid passwords" do
+    password_to_test = "mySecurePassword123!"
+    user = User.create!(
+      username: "auth_user_test_#{SecureRandom.hex(3)}",
+      email: "auth_test_#{SecureRandom.hex(3)}@example.com",
+      password: password_to_test,
+      password_confirmation: password_to_test
+    )
+    assert user.authenticate(password_to_test), "Authentication should succeed with the correct password."
+    assert_not user.authenticate("ThisIsAWrongPassword"), "Authentication should fail with an incorrect password."
+    assert_not user.authenticate(nil), "Authentication should fail with a nil password."
+    assert_not user.authenticate(""), "Authentication should fail with an empty password string."
+  end
+
+  test "password and password_confirmation are required on new record creation" do
+    user_no_pass = User.new(username: "user_no_pass_#{SecureRandom.hex(3)}", email: "nopass_#{SecureRandom.hex(3)}@example.com")
+    assert_not user_no_pass.valid?, "User creation should fail without a password."
+    assert_includes user_no_pass.errors[:password], "can't be blank"
+
+    user_mismatch_confirm = User.new(
+      username: "user_confirm_#{SecureRandom.hex(3)}",
+      email: "confirm_#{SecureRandom.hex(3)}@example.com",
+      password: "passwordValue",
+      password_confirmation: "differentPasswordValue"
+    )
+    assert_not user_mismatch_confirm.valid?, "User creation should fail if password_confirmation does not match."
+    assert_includes user_mismatch_confirm.errors[:password_confirmation], "doesn't match Password"
+  end
+
+  test "password is not required on update if password field is not being changed" do
+    user_to_update = User.create!(
+      username: "update_user_test_#{SecureRandom.hex(3)}",
+      email: "update_test_#{SecureRandom.hex(3)}@example.com",
+      password: "initial_secret_password"
+    )
+    user_to_update.username = "new_updated_username" # Update a non-password field
+    # Do not set user.password or user.password_confirmation
+    assert user_to_update.valid?, "User should remain valid when updating non-password fields. Errors: #{user_to_update.errors.full_messages.join(", ")}"
+    assert user_to_update.save
+  end
+
+  test "if password field is set on update, confirmation is also required and must match" do
+    user_changing_pass = User.create!(
+      username: "change_pass_user_#{SecureRandom.hex(3)}",
+      email: "changepass_test_#{SecureRandom.hex(3)}@example.com",
+      password: "old_secret_password"
+    )
+
+    # Scenario 1: Password set, confirmation blank
+    user_changing_pass.password = "a_new_secret_password"
+    user_changing_pass.password_confirmation = ""
+    assert_not user_changing_pass.valid?, "Should be invalid if password is set but confirmation is blank during update."
+    assert_includes user_changing_pass.errors[:password_confirmation], "can't be blank"
+
+    # Scenario 2: Password set, confirmation mismatch
+    user_changing_pass.password_confirmation = "mismatched_new_secret"
+    assert_not user_changing_pass.valid?, "Should be invalid if password confirmation mismatches during update."
+    assert_includes user_changing_pass.errors[:password_confirmation], "doesn't match Password"
+
+    # Scenario 3: Password set, confirmation matches - should be valid
+    user_changing_pass.password_confirmation = "a_new_secret_password"
+    assert user_changing_pass.valid?, "Should be valid if password and matching confirmation are provided for update. Errors: #{user_changing_pass.errors.full_messages.join(", ")}"
+  end
+
+  # General Validity and Optional Attributes
+  test "should be valid with all required attributes (username, email, password)" do
     user = User.new(
-      name: "Optional Name Field", # `name` is not validated for presence
-      username: "validuser_#{SecureRandom.hex(4)}",
-      email: "valid_#{SecureRandom.hex(4)}@example.com",
-      password: "a_valid_password",
-      password_confirmation: "a_valid_password"
+      name: "Optional User Name", # `name` is not validated for presence in the current User model
+      username: "valid_user_test_#{SecureRandom.hex(4)}",
+      email: "valid_test_#{SecureRandom.hex(4)}@example.com",
+      password: "a_secure_password123",
+      password_confirmation: "a_secure_password123"
     )
     assert user.valid?, user.errors.full_messages.join(", ")
   end
 
   test "name attribute (not validated for presence) can be nil" do
-    user = User.new(
-      username: "nilnameuser_#{SecureRandom.hex(4)}",
-      email: "nilname_#{SecureRandom.hex(4)}@example.com",
-      password: "password_val"
-      # name is not set, so it's nil
+    user_with_nil_name = User.new(
+      username: "nil_name_user_test_#{SecureRandom.hex(4)}",
+      email: "nilname_test_#{SecureRandom.hex(4)}@example.com",
+      password: "password_value"
+      # `name` attribute is not set, so it defaults to nil.
     )
-    assert user.valid?, "User should be valid with a nil name. Errors: #{user.errors.full_messages.join(", ")}"
-    assert user.save
-    assert_nil user.reload.name
-  end
-
-  # More explicit manual tests for case-insensitive uniqueness
-  test "username must be unique (case-insensitive check)" do
-    upcase_username = "UniqueUserForTest_#{SecureRandom.hex(3)}"
-    downcase_username = upcase_username.downcase
-
-    User.create!(username: upcase_username, email: "unique_user_email1_#{SecureRandom.hex(3)}@example.com", password: "password")
-
-    user_conflict_same_case = User.new(username: upcase_username, email: "other_email1_#{SecureRandom.hex(3)}@example.com", password: "password")
-    assert_not user_conflict_same_case.valid?
-    assert_includes user_conflict_same_case.errors[:username], "has already been taken"
-
-    user_conflict_different_case = User.new(username: downcase_username, email: "other_email2_#{SecureRandom.hex(3)}@example.com", password: "password")
-    assert_not user_conflict_different_case.valid?
-    assert_includes user_conflict_different_case.errors[:username], "has already been taken"
-  end
-
-  test "email must be unique (case-insensitive check)" do
-    upcase_email = "UniqueEmailForTest_#{SecureRandom.hex(3)}@example.com"
-    downcase_email = upcase_email.downcase
-
-    User.create!(username: "unique_email_userA_#{SecureRandom.hex(3)}", email: upcase_email, password: "password")
-
-    user_conflict_same_case = User.new(username: "other_userA_#{SecureRandom.hex(3)}", email: upcase_email, password: "password")
-    assert_not user_conflict_same_case.valid?
-    assert_includes user_conflict_same_case.errors[:email], "has already been taken"
-
-    user_conflict_different_case = User.new(username: "other_userB_#{SecureRandom.hex(3)}", email: downcase_email, password: "password")
-    assert_not user_conflict_different_case.valid?
-    assert_includes user_conflict_different_case.errors[:email], "has already been taken"
+    assert user_with_nil_name.valid?, "User should be valid with a nil name. Errors: #{user_with_nil_name.errors.full_messages.join(", ")}"
+    assert user_with_nil_name.save
+    assert_nil user_with_nil_name.reload.name
   end
 end

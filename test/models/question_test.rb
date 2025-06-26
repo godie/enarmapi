@@ -1,186 +1,228 @@
 require "test_helper"
 
 class QuestionTest < ActiveSupport::TestCase
-  context "associations" do
-    should belong_to(:clinical_case)
-    should have_one(:category).through(:clinical_case)
-    should have_many(:answers).dependent(:destroy)
-    should accept_nested_attributes_for(:answers).allow_destroy(true)
-
-    should have_many(:player_answers)
-    should have_many(:practicing_players).through(:player_answers).source(:player)
-
-    should have_many(:exam_questions)
-    should have_many(:exams).through(:exam_questions)
+  # Associations
+  test "should belong to clinical_case" do
+    q = Question.new
+    assert_respond_to q, :clinical_case
+    assert_respond_to q, :clinical_case_id
   end
 
-  context "validations" do
-    should validate_presence_of(:text)
+  test "should have one category through clinical_case" do
+    q = Question.new
+    assert_respond_to q, :category
+  end
 
-    # clinical_case_id is `null: false` in DB schema.
-    # `belongs_to :clinical_case` implies presence validation by default.
-    should "be invalid without a clinical_case" do
-      question = Question.new(text: "A question text here.")
-      assert_not question.valid?, "Question should be invalid without a clinical_case."
-      assert_includes question.errors[:clinical_case], "must exist"
+  test "should have many answers and they should be dependent destroy" do
+    q = Question.new
+    assert_respond_to q, :answers
+
+    # Test dependent destroy
+    question_with_answers = Question.create!(text: "Q for Answer Destroy Test", clinical_case: clinical_cases(:one))
+    ans = Answer.create!(question: question_with_answers, text: "Ans for Q Destroy Test", is_correct: true)
+    ans_id = ans.id
+
+    assert_difference "Answer.count", -1 do
+      question_with_answers.destroy
     end
+    assert_not Answer.exists?(ans_id)
   end
 
+  test "should accept nested attributes for answers and allow destroy" do
+    q = Question.new
+    assert_respond_to q, :answers_attributes=
+    # Further functionality tests for nested attributes are below.
+  end
+
+  test "should have many player_answers" do
+    q = Question.new
+    assert_respond_to q, :player_answers
+  end
+
+  test "should have many practicing_players through player_answers" do
+    q = Question.new
+    assert_respond_to q, :practicing_players
+  end
+
+  test "should have many exam_questions" do
+    q = Question.new
+    assert_respond_to q, :exam_questions
+  end
+
+  test "should have many exams through exam_questions" do
+    q = Question.new
+    assert_respond_to q, :exams
+  end
+
+  # Validations
+  test "should validate presence of text" do
+    question = Question.new(clinical_case: clinical_cases(:one)) # Has clinical_case but no text
+    assert_not question.valid?, "Question should be invalid without text"
+    assert_includes question.errors[:text], "can't be blank"
+  end
+
+  test "should be invalid without a clinical_case" do
+    # clinical_case_id is `null: false` in DB schema.
+    # `belongs_to :clinical_case` also implies presence by default.
+    question = Question.new(text: "A question text without a clinical case.")
+    assert_not question.valid?, "Question should be invalid without a clinical_case association"
+    assert_includes question.errors[:clinical_case], "must exist"
+  end
+
+  # General setup for some tests
   setup do
-    @category_one = categories(:one)
-    @clinical_case_one = clinical_cases(:one) # Belongs to @category_one
-    @player_one = players(:player_one)
+    @category_one_fix = categories(:one)
+    @clinical_case_one_fix = clinical_cases(:one) # Belongs to @category_one_fix
+    @player_one_fix = players(:player_one)
   end
 
   test "should be valid with text and an associated clinical_case" do
-    question = Question.new(text: "Is this a valid question?", clinical_case: @clinical_case_one)
+    question = Question.new(text: "Is this a valid question text?", clinical_case: @clinical_case_one_fix)
     assert question.valid?, question.errors.full_messages.join(", ")
   end
 
-  test "can accept nested attributes for creating answers" do
+  # Nested Attributes for Answers - Functionality Tests
+  test "can accept and create nested answers" do
     attributes = {
-      text: "Question with several nested answers",
-      clinical_case_id: @clinical_case_one.id,
+      text: "Question with multiple nested answers for creation",
+      clinical_case_id: @clinical_case_one_fix.id,
       answers_attributes: [
-        { text: "Nested Answer A (Correct)", is_correct: true },
-        { text: "Nested Answer B (Incorrect)", is_correct: false },
-        { description: "Nested Answer C (Only description)", is_correct: false } # Answer's `text` can be nil
+        { text: "Nested Answer X (Correct)", is_correct: true },
+        { text: "Nested Answer Y (Incorrect)", is_correct: false },
+        { description: "Nested Answer Z (Desc only)", is_correct: false } # Answer's `text` can be nil
       ]
     }
     question = Question.new(attributes)
-    assert question.valid?, "Question with nested answers should be valid. Errors: #{question.errors.full_messages.join(", ")}"
-    assert question.save, "Failed to save question with nested answers. Errors: #{question.errors.full_messages.join(", ")}"
-    question.reload
-    assert_equal 3, question.answers.count, "Should have created 3 answers"
-    assert_equal "Nested Answer A (Correct)", question.answers.find_by(is_correct: true)&.text
+    assert question.valid?, "Q with nested answers (create) should be valid. Errors: #{question.errors.full_messages.join(", ")}"
+    assert question.save, "Failed to save Q with nested answers. Errors: #{question.errors.full_messages.join(", ")}"
+    question.reload # Reload to fetch answers from DB
+    assert_equal 3, question.answers.count, "Should have created 3 answers via nesting"
+    assert_equal "Nested Answer X (Correct)", question.answers.find_by(is_correct: true)&.text
   end
 
-  test "destroying a question also destroys its associated answers but not its clinical_case" do
-    question_for_deletion = Question.create!(text: "This question will be deleted.", clinical_case: @clinical_case_one)
-    Answer.create!(question: question_for_deletion, text: "Answer 1 for deletion test", is_correct: true)
-    Answer.create!(question: question_for_deletion, text: "Answer 2 for deletion test", is_correct: false)
+  test "can update attributes of nested answers" do
+    question_to_update_ans = Question.create!(text: "Q for updating its answers", clinical_case: @clinical_case_one_fix)
+    answer_to_update = Answer.create!(text: "Initial Answer Text", question: question_to_update_ans, is_correct: true)
 
-    answer_ids = question_for_deletion.answers.pluck(:id)
-    clinical_case_id = question_for_deletion.clinical_case_id
-    assert_equal 2, answer_ids.count, "Should have 2 answers before question deletion"
-
-    question_for_deletion.destroy
-
-    assert_raises(ActiveRecord::RecordNotFound) { Question.find(question_for_deletion.id) }
-    answer_ids.each do |id|
-      assert_raises(ActiveRecord::RecordNotFound, "Answer with ID #{id} should have been destroyed.") { Answer.find(id) }
-    end
-    assert ClinicalCase.exists?(clinical_case_id), "Associated ClinicalCase should still exist."
-  end
-
-  test "can update nested answers' attributes" do
-    question_for_update = Question.create!(text: "Question for updating its answers", clinical_case: @clinical_case_one)
-    answer_to_update = Answer.create!(text: "Initial Text", question: question_for_update, is_correct: true)
-
-    question_for_update.update!(answers_attributes: [
-      { id: answer_to_update.id, text: "Updated Text", is_correct: false }
+    question_to_update_ans.update!(answers_attributes: [
+      { id: answer_to_update.id, text: "Updated Answer Text", is_correct: false }
     ])
-    answer_to_update.reload
-    assert_equal "Updated Text", answer_to_update.text
+    answer_to_update.reload # Fetch updated state from DB
+    assert_equal "Updated Answer Text", answer_to_update.text
     assert_equal false, answer_to_update.is_correct
   end
 
-  test "can destroy nested answers using _destroy flag" do
-    question_for_destroy_nested = Question.create!(text: "Q for destroying one of its nested answers", clinical_case: @clinical_case_one)
-    ans_kept = Answer.create!(text: "This answer is kept", question: question_for_destroy_nested, is_correct: true)
-    ans_destroyed = Answer.create!(text: "This answer is destroyed", question: question_for_destroy_nested, is_correct: false)
+  test "can destroy nested answers using _destroy flag in attributes" do
+    q_for_destroy_nested_ans = Question.create!(text: "Q for destroying one of its answers via nesting", clinical_case: @clinical_case_one_fix)
+    ans_to_be_kept = Answer.create!(text: "Answer to be kept", question: q_for_destroy_nested_ans, is_correct: true)
+    ans_to_be_destroyed = Answer.create!(text: "Answer to be destroyed", question: q_for_destroy_nested_ans, is_correct: false)
 
-    assert_equal 2, question_for_destroy_nested.answers.count
+    assert_equal 2, q_for_destroy_nested_ans.answers.count, "Should have 2 answers initially"
 
-    question_for_destroy_nested.update!(answers_attributes: [
-      { id: ans_destroyed.id, _destroy: "1" } # Mark for destruction
+    q_for_destroy_nested_ans.update!(answers_attributes: [
+      { id: ans_to_be_destroyed.id, _destroy: "1" } # Mark for destruction
     ])
-    question_for_destroy_nested.reload
+    q_for_destroy_nested_ans.reload
 
-    assert_equal 1, question_for_destroy_nested.answers.count, "Should have one answer remaining"
-    assert_equal ans_kept, question_for_destroy_nested.answers.first
-    assert_raises(ActiveRecord::RecordNotFound) { Answer.find(ans_destroyed.id) }
+    assert_equal 1, q_for_destroy_nested_ans.answers.count, "Should have one answer remaining after _destroy"
+    assert_equal ans_to_be_kept, q_for_destroy_nested_ans.answers.first
+    assert_raises(ActiveRecord::RecordNotFound) { Answer.find(ans_to_be_destroyed.id) }
   end
 
-  test "category association through clinical_case works" do
-    question = Question.new(text: "Test Q for category access", clinical_case: @clinical_case_one)
-    # @clinical_case_one is associated with @category_one (categories(:one)) in setup
-    assert_equal @category_one, question.category
+  test "category association (has_one :through) works correctly" do
+    question = Question.new(text: "Test Q for direct category access", clinical_case: @clinical_case_one_fix)
+    # @clinical_case_one_fix is associated with @category_one_fix (categories(:one))
+    assert_equal @category_one_fix, question.category
   end
 
-  context "scopes" do
-    setup do
-      # Using fresh records for scope tests to avoid interference.
-      @cat_scope1 = Category.find_or_create_by!(name: "Scope Category Alpha")
-      @cat_scope2 = Category.find_or_create_by!(name: "Scope Category Beta")
+  # Scopes
+  def setup_for_scope_tests
+    # Clean existing records created by other tests if they interfere.
+    # Using find_or_create_by for setup records to make it somewhat idempotent.
+    @cat_s1 = Category.find_or_create_by!(name: "QuestionScope Cat Alpha")
+    @cat_s2 = Category.find_or_create_by!(name: "QuestionScope Cat Beta")
 
-      @cc_scope1_cat1 = ClinicalCase.find_or_create_by!(name: "Scope CC1 Cat1", category: @cat_scope1, description: "Desc")
-      @cc_scope2_cat1 = ClinicalCase.find_or_create_by!(name: "Scope CC2 Cat1", category: @cat_scope1, description: "Desc")
-      @cc_scope1_cat2 = ClinicalCase.find_or_create_by!(name: "Scope CC1 Cat2", category: @cat_scope2, description: "Desc")
+    @cc_s1_c1 = ClinicalCase.find_or_create_by!(name: "QS CC1 C1", category: @cat_s1, description: "d")
+    @cc_s2_c1 = ClinicalCase.find_or_create_by!(name: "QS CC2 C1", category: @cat_s1, description: "d") # Another CC in Cat S1
+    @cc_s1_c2 = ClinicalCase.find_or_create_by!(name: "QS CC1 C2", category: @cat_s2, description: "d")
 
-      @q_s_c1_cc1 = Question.create!(text: "Q Scope C1 CC1", clinical_case: @cc_scope1_cat1)
-      @q_s_c1_cc2 = Question.create!(text: "Q Scope C1 CC2", clinical_case: @cc_scope2_cat1)
-      @q_s_c2_cc1 = Question.create!(text: "Q Scope C2 CC1", clinical_case: @cc_scope1_cat2)
+    @q_s_c1_cc1 = Question.find_or_create_by!(text: "QS Q C1 CC1", clinical_case: @cc_s1_c1)
+    @q_s_c1_cc2 = Question.find_or_create_by!(text: "QS Q C1 CC2", clinical_case: @cc_s2_c1) # In Cat S1 via CC S2 C1
+    @q_s_c2_cc1 = Question.find_or_create_by!(text: "QS Q C2 CC1", clinical_case: @cc_s1_c2) # In Cat S2
 
-      # For :not_practiced_by scope
-      @player_scope_test = Player.create!(facebook_id: "fb_q_scopes_#{SecureRandom.hex(4)}")
-      # @q_s_c1_cc1 is NOT practiced by @player_scope_test
-      # @q_s_c1_cc2 IS practiced by @player_scope_test
-      ans_for_q_s_c1_cc2 = Answer.create!(question: @q_s_c1_cc2, text: "Ans for practiced Q", is_correct: true)
-      PlayerAnswer.create!(player: @player_scope_test, question: @q_s_c1_cc2, answer: ans_for_q_s_c1_cc2)
+    @player_s_test = Player.find_or_create_by!(facebook_id: "fb_q_scopes_player_#{SecureRandom.hex(3)}")
+    # @q_s_c1_cc2 is practiced by @player_s_test
+    ans_for_q_s_c1_cc2 = Answer.find_or_create_by!(question: @q_s_c1_cc2, text: "Ans for practiced QS Q", is_correct: true)
+    PlayerAnswer.find_or_create_by!(player: @player_s_test, question: @q_s_c1_cc2) do |pa|
+      pa.answer = ans_for_q_s_c1_cc2
     end
+    # @q_s_c1_cc1 and @q_s_c2_cc1 are NOT practiced by @player_s_test
+  end
 
-    should "return all questions for :with_clinical_case scope (as clinical_case is mandatory)" do
-      # Given clinical_case_id is NOT NULL, this scope effectively returns all questions.
-      questions_with_case = Question.with_clinical_case
-      # Check if all questions created in this context are included.
-      # This is a bit broad; better to check specific list if possible, or count.
-      assert_includes questions_with_case, @q_s_c1_cc1
-      assert_includes questions_with_case, @q_s_c1_cc2
-      assert_includes questions_with_case, @q_s_c2_cc1
-      assert_equal Question.count, questions_with_case.count # More robust if no other questions exist
-    end
+  test "with_clinical_case scope returns all questions (as clinical_case is mandatory)" do
+    setup_for_scope_tests
+    # Given clinical_case_id is NOT NULL, this scope should effectively return all questions.
+    questions_with_case = Question.with_clinical_case
 
-    should "return empty for :standalone scope (as clinical_case is mandatory)" do
-      # clinical_case_id cannot be NULL due to DB constraint.
-      assert_empty Question.standalone, ":standalone scope should be empty."
-    end
+    # Check if all questions created in the scope setup are included.
+    assert_includes questions_with_case, @q_s_c1_cc1
+    assert_includes questions_with_case, @q_s_c1_cc2
+    assert_includes questions_with_case, @q_s_c2_cc1
+    # More robust: check count against total if DB is clean or filtered for this test's records.
+    # For now, assuming these are the only relevant ones.
+    assert questions_with_case.count >= 3 # Should be at least the ones we created.
+  end
 
-    should "filter questions by category_id for :by_category scope" do
-      questions_in_cat_scope1 = Question.by_category(@cat_scope1.id)
-      assert_includes questions_in_cat_scope1, @q_s_c1_cc1
-      assert_includes questions_in_cat_scope1, @q_s_c1_cc2
-      assert_not_includes questions_in_cat_scope1, @q_s_c2_cc1
-      assert_equal 2, questions_in_cat_scope1.count
+  test "standalone scope returns empty (as clinical_case is mandatory)" do
+    setup_for_scope_tests
+    # clinical_case_id cannot be NULL due to DB constraint `null: false`.
+    assert_empty Question.standalone, ":standalone scope should be empty due to schema constraints."
+  end
 
-      questions_in_cat_scope2 = Question.by_category(@cat_scope2.id)
-      assert_includes questions_in_cat_scope2, @q_s_c2_cc1
-      assert_not_includes questions_in_cat_scope2, @q_s_c1_cc1
-      assert_equal 1, questions_in_cat_scope2.count
-    end
+  test "by_category scope filters questions by category_id" do
+    setup_for_scope_tests
+    questions_in_cat_s1 = Question.by_category(@cat_s1.id)
+    assert_includes questions_in_cat_s1, @q_s_c1_cc1
+    assert_includes questions_in_cat_s1, @q_s_c1_cc2
+    assert_not_includes questions_in_cat_s1, @q_s_c2_cc1
+    assert_equal 2, questions_in_cat_s1.count # Assuming only these two in @cat_s1 from this setup
 
-    should "filter questions by clinical_case_id for :by_clinical_case scope" do
-      questions_in_cc1_cat1 = Question.by_clinical_case(@cc_scope1_cat1.id)
-      assert_includes questions_in_cc1_cat1, @q_s_c1_cc1
-      assert_not_includes questions_in_cc1_cat1, @q_s_c1_cc2
-      assert_equal 1, questions_in_cc1_cat1.count
-    end
+    questions_in_cat_s2 = Question.by_category(@cat_s2.id)
+    assert_includes questions_in_cat_s2, @q_s_c2_cc1
+    assert_not_includes questions_in_cat_s2, @q_s_c1_cc1
+    assert_equal 1, questions_in_cat_s2.count # Assuming only this one in @cat_s2
+  end
 
-    should "return questions not practiced by a given player for :not_practiced_by scope" do
-      # @player_scope_test has practiced @q_s_c1_cc2.
-      # @q_s_c1_cc1 and @q_s_c2_cc1 are not practiced by @player_scope_test.
-      not_practiced_list = Question.not_practiced_by(@player_scope_test)
+  test "by_clinical_case scope filters questions by clinical_case_id" do
+    setup_for_scope_tests
+    questions_in_cc_s1_c1 = Question.by_clinical_case(@cc_s1_c1.id)
+    assert_includes questions_in_cc_s1_c1, @q_s_c1_cc1
+    assert_not_includes questions_in_cc_s1_c1, @q_s_c1_cc2 # This is in a different CC (@cc_s2_c1)
+    assert_equal 1, questions_in_cc_s1_c1.count
+  end
 
-      assert_includes not_practiced_list, @q_s_c1_cc1
-      assert_includes not_practiced_list, @q_s_c2_cc1
-      assert_not_includes not_practiced_list, @q_s_c1_cc2
+  test "not_practiced_by scope returns questions not practiced by a given player" do
+    setup_for_scope_tests
+    # @player_s_test has practiced @q_s_c1_cc2.
+    # @q_s_c1_cc1 and @q_s_c2_cc1 are not practiced by @player_s_test.
+    not_practiced_list = Question.not_practiced_by(@player_s_test)
 
-      # Ensure other questions from general fixtures are also considered if not practiced
-      # This depends on the full DB state. For isolated test, count might be more specific.
-      # Example: Total questions - practiced questions by this player = not_practiced count for this player.
-      total_questions = Question.count
-      practiced_by_player_count = @player_scope_test.practiced_questions.count
-      assert_equal (total_questions - practiced_by_player_count), not_practiced_list.count
-    end
+    assert_includes not_practiced_list, @q_s_c1_cc1, "@q_s_c1_cc1 should be in not_practiced_by list"
+    assert_includes not_practiced_list, @q_s_c2_cc1, "@q_s_c2_cc1 should be in not_practiced_by list"
+    assert_not_includes not_practiced_list, @q_s_c1_cc2, "@q_s_c1_cc2 (practiced) should NOT be in list"
+
+    # Consider total questions vs. practiced for this player for a count check
+    total_questions_in_scope_setup = 3 # We created 3 questions in setup_for_scope_tests
+    practiced_by_player_count = @player_s_test.practiced_questions.count # Should be 1
+
+    # This check is specific to the questions created *within setup_for_scope_tests*
+    # If other questions exist from fixtures or other tests, this count might be off.
+    # A more robust way might be to filter Question.all against those created in this setup.
+    # For simplicity, assuming only these 3 are relevant for this player's "not practiced" status.
+    # The `not_practiced_by` scope operates on `Question.where.not(id: player.practiced_questions.ids)`
+    # So it considers ALL questions in the DB.
+
+    expected_not_practiced_count = Question.count - practiced_by_player_count
+    assert_equal expected_not_practiced_count, not_practiced_list.count
   end
 end

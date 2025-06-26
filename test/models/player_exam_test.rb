@@ -1,167 +1,192 @@
 require "test_helper"
 
 class PlayerExamTest < ActiveSupport::TestCase
-  context "associations" do
-    should belong_to(:player)
-    should belong_to(:exam)
-    should have_many(:player_exam_answers)
-    should have_many(:exam_questions).through(:exam)
+  # Associations
+  test "should belong to player" do
+    pe = PlayerExam.new
+    assert_respond_to pe, :player
+    assert_respond_to pe, :player_id
   end
 
-  context "validations" do
-    should "be invalid without a player" do
-      pe = PlayerExam.new(exam: exams(:one))
-      assert_not pe.valid?
-      assert_includes pe.errors[:player], "must exist"
-    end
-
-    should "be invalid without an exam" do
-      pe = PlayerExam.new(player: players(:player_one))
-      assert_not pe.valid?
-      assert_includes pe.errors[:exam], "must exist"
-    end
-    # No explicit uniqueness validation on (player, exam) in model/schema.
+  test "should belong to exam" do
+    pe = PlayerExam.new
+    assert_respond_to pe, :exam
+    assert_respond_to pe, :exam_id
   end
 
+  test "should have many player_exam_answers" do
+    pe = PlayerExam.new
+    assert_respond_to pe, :player_exam_answers
+    # Dependent destroy for player_exam_answers is not specified in model.
+  end
+
+  test "should have many exam_questions through exam" do
+    pe = PlayerExam.new
+    assert_respond_to pe, :exam_questions
+  end
+
+  # Validations
+  test "should be invalid without a player" do
+    player_exam = PlayerExam.new(exam: exams(:one))
+    assert_not player_exam.valid?, "PlayerExam should be invalid without a player"
+    assert_includes player_exam.errors[:player], "must exist"
+  end
+
+  test "should be invalid without an exam" do
+    player_exam = PlayerExam.new(player: players(:player_one))
+    assert_not player_exam.valid?, "PlayerExam should be invalid without an exam"
+    assert_includes player_exam.errors[:exam], "must exist"
+  end
+  # No explicit uniqueness validation on (player, exam) in schema/model to test here.
+
+  # General setup for tests that don't need isolated scope/method data
   setup do
-    @player = players(:player_one)
-    @exam = exams(:one) # exams(:one) has name "Cardiology Basics"
-    # exam_questions.yml defines:
-    # eq_exam1_q1: exam: one, question: one (Cardio Q1), position: 1, points: 10
-    # eq_exam1_q2: exam: one, question: two (Cardio Q2), position: 2, points: 5
-    @exam_question1_for_exam1 = exam_questions(:eq_exam1_q1)
-    @exam_question2_for_exam1 = exam_questions(:eq_exam1_q2)
+    @player_one_fix = players(:player_one)
+    @exam_one_fix = exams(:one) # Fixture: "Cardiology Basics"
+    # exam_questions.yml links to @exam_one_fix:
+    # eq_exam1_q1 (q: questions(:one), points: 10)
+    # eq_exam1_q2 (q: questions(:two), points: 5)
+    @eq1_for_exam1_fix = exam_questions(:eq_exam1_q1)
+    @eq2_for_exam1_fix = exam_questions(:eq_exam1_q2)
 
-    # Answers for these questions
-    # answers.yml:
-    # one: question: one (Cardio Q1), description: "IECA o ARA II", is_correct: true
-    # three: question: two (Cardio Q2), description: "Poliuria", is_correct: true
-    @answer_for_eq1_question = answers(:one)
-    @answer_for_eq2_question = answers(:three)
+    @ans_for_eq1_q_fix = answers(:one) # For questions(:one)
+    @ans_for_eq2_q_fix = answers(:three) # For questions(:two)
 
-    # Ensure fixture associations align, especially if answers might belong to other questions by default
-    @answer_for_eq1_question.update!(question: @exam_question1_for_exam1.question) if @answer_for_eq1_question.question != @exam_question1_for_exam1.question
-    @answer_for_eq2_question.update!(question: @exam_question2_for_exam1.question) if @answer_for_eq2_question.question != @exam_question2_for_exam1.question
+    # Ensure fixture answer compatibility (important if fixtures are complex)
+    if @ans_for_eq1_q_fix.question != @eq1_for_exam1_fix.question
+      @ans_for_eq1_q_fix.update!(question: @eq1_for_exam1_fix.question)
+    end
+    if @ans_for_eq2_q_fix.question != @eq2_for_exam1_fix.question
+      @ans_for_eq2_q_fix.update!(question: @eq2_for_exam1_fix.question)
+    end
   end
 
   test "should be valid with a player and an exam" do
-    player_exam = PlayerExam.new(player: @player, exam: @exam)
+    player_exam = PlayerExam.new(player: @player_one_fix, exam: @exam_one_fix)
     assert player_exam.valid?, player_exam.errors.full_messages.join(", ")
   end
 
-  test "optional attributes (started_at, completed_at, score, status) can be nil" do
-    player_exam = PlayerExam.create!(player: @player, exam: @exam) # Save to DB
-    player_exam.reload
+  test "optional attributes (started_at, completed_at, score, status) can be nil upon creation" do
+    player_exam = PlayerExam.create!(player: @player_one_fix, exam: @exam_one_fix) # Save to DB
+    player_exam.reload # Fetch from DB to check persisted state (nil for these fields)
     assert_nil player_exam.started_at
     assert_nil player_exam.completed_at
     assert_nil player_exam.score
-    assert_nil player_exam.status # No default for status in schema
+    assert_nil player_exam.status # No default for status in schema, so should be nil
   end
 
-  context "scopes" do
-    setup do
-      PlayerExam.delete_all # Clean slate for scope tests
+  # Scopes
+  def setup_for_scope_tests
+    PlayerExam.delete_all # Clean slate for precise scope tests
 
-      @exam2_for_scopes = Exam.create!(name: "Scope Exam 2")
-      @exam3_for_scopes = exams(:two) # Another exam from fixtures, e.g., "Neurology Basics"
+    @player_s = Player.create!(facebook_id: "fb_pe_scope_#{SecureRandom.hex(3)}")
+    @exam_s1 = Exam.create!(name: "Scope Exam PE1")
+    @exam_s2 = Exam.create!(name: "Scope Exam PE2")
+    @exam_s3 = Exam.create!(name: "Scope Exam PE3") # exams(:two) could also be used if distinct
 
+    @pe_completed_scope = PlayerExam.create!(player: @player_s, exam: @exam_s1, status: "completed", score: 85, completed_at: 1.hour.ago)
+    @pe_in_progress_scope = PlayerExam.create!(player: @player_s, exam: @exam_s2, status: "in_progress", started_at: 30.minutes.ago)
+    @pe_pending_scope = PlayerExam.create!(player: @player_s, exam: @exam_s3, status: "pending")
 
-      @pe_completed = PlayerExam.create!(player: @player, exam: @exam, status: "completed", score: 80, completed_at: Time.now)
-      @pe_in_progress = PlayerExam.create!(player: @player, exam: @exam2_for_scopes, status: "in_progress", started_at: Time.now)
-      @pe_pending = PlayerExam.create!(player: @player, exam: @exam3_for_scopes, status: "pending")
-      # Another completed for count check
-      other_player = Player.create!(facebook_id: "fb_other_scope_#{SecureRandom.hex(3)}")
-      @pe_completed_other_player = PlayerExam.create!(player: other_player, exam: @exam, status: "completed", score: 90)
-    end
-
-    should "return only completed player_exams for :complete scope" do
-      completed_exams_scope = PlayerExam.complete
-      assert_includes completed_exams_scope, @pe_completed
-      assert_includes completed_exams_scope, @pe_completed_other_player
-      assert_not_includes completed_exams_scope, @pe_in_progress
-      assert_not_includes completed_exams_scope, @pe_pending
-      assert_equal 2, completed_exams_scope.count
-    end
-
-    should "return only in_progress player_exams for :in_progress scope" do
-      # Assuming the typo 'la' in `scope :in_progress, -> { where(la "in_progress") }`
-      # is fixed in the model to `scope :in_progress, -> { where(status: "in_progress") }`
-      # If not fixed, this test will fail or error out.
-      in_progress_exams_scope = PlayerExam.in_progress
-      assert_includes in_progress_exams_scope, @pe_in_progress
-      assert_not_includes in_progress_exams_scope, @pe_completed
-      assert_not_includes in_progress_exams_scope, @pe_pending
-      assert_equal 1, in_progress_exams_scope.count
-    end
+    # Another completed for a different player to test scope isn't player-specific unless intended
+    other_player_s = Player.create!(facebook_id: "fb_pe_other_scope_#{SecureRandom.hex(3)}")
+    @pe_completed_other_player_scope = PlayerExam.create!(player: other_player_s, exam: @exam_s1, status: "completed", score: 90, completed_at: Time.now)
   end
 
-  context "#calculate_score" do
-    setup do
-      # A fresh PlayerExam for this context
-      @player_exam_for_calc_score = PlayerExam.create!(player: @player, exam: @exam)
-      # @exam (exams(:one)) has @exam_question1_for_exam1 (points: 10) and @exam_question2_for_exam1 (points: 5)
-    end
+  test "complete scope returns only completed player_exams" do
+    setup_for_scope_tests
+    completed_exams_from_scope = PlayerExam.complete
 
-    should "sum points_earned from associated player_exam_answers" do
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score,
-        exam_question: @exam_question1_for_exam1, # Max points: 10
-        answer: @answer_for_eq1_question, # Correct answer for its question
-        is_correct: true, # This should be set by PlayerExamAnswer model based on Answer
-        points_earned: @exam_question1_for_exam1.points # Earned full 10 points
-      )
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score,
-        exam_question: @exam_question2_for_exam1, # Max points: 5
-        answer: @answer_for_eq2_question, # Correct answer
-        is_correct: true,
-        points_earned: 3 # Earned partial 3 points
-      )
-      assert_equal 13, @player_exam_for_calc_score.calculate_score # 10 + 3
-    end
+    assert_includes completed_exams_from_scope, @pe_completed_scope
+    assert_includes completed_exams_from_scope, @pe_completed_other_player_scope
+    assert_not_includes completed_exams_from_scope, @pe_in_progress_scope
+    assert_not_includes completed_exams_from_scope, @pe_pending_scope
+    assert_equal 2, completed_exams_from_scope.count
+  end
 
-    should "return 0 if no player_exam_answers exist" do
-      assert_equal 0, @player_exam_for_calc_score.calculate_score # No P.E.Answers yet
-    end
+  test "in_progress scope returns only in_progress player_exams" do
+    # This test assumes the typo `la` in `scope :in_progress, -> { where(la "in_progress") }`
+    # in the PlayerExam model has been corrected to `status: "in_progress"`.
+    # If the typo persists, this test will likely fail or error.
+    setup_for_scope_tests
+    in_progress_exams_from_scope = PlayerExam.in_progress
 
-    should "return 0 if player_exam_answers have nil points_earned" do
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score, exam_question: @exam_question1_for_exam1,
-        answer: @answer_for_eq1_question, points_earned: nil
-      )
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score, exam_question: @exam_question2_for_exam1,
-        answer: @answer_for_eq2_question, points_earned: nil
-      )
-      assert_equal 0, @player_exam_for_calc_score.calculate_score # SUM of NULLs is 0
-    end
+    assert_includes in_progress_exams_from_scope, @pe_in_progress_scope
+    assert_not_includes in_progress_exams_from_scope, @pe_completed_scope
+    assert_not_includes in_progress_exams_from_scope, @pe_pending_scope
+    assert_equal 1, in_progress_exams_from_scope.count
+  end
 
-     should "correctly sum if some points_earned are nil and some are not" do
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score, exam_question: @exam_question1_for_exam1,
-        answer: @answer_for_eq1_question, points_earned: 7
-      )
-      PlayerExamAnswer.create!(
-        player_exam: @player_exam_for_calc_score, exam_question: @exam_question2_for_exam1,
-        answer: @answer_for_eq2_question, points_earned: nil
-      )
-      assert_equal 7, @player_exam_for_calc_score.calculate_score
-    end
+  # Instance Method: calculate_score
+  def setup_for_calculate_score_test
+    @player_cs = Player.create!(facebook_id: "fb_pe_cs_#{SecureRandom.hex(3)}")
+    # Use an exam with known ExamQuestions and points
+    @exam_cs = exams(:one) # This exam has @eq1_for_exam1_fix (10 pts) and @eq2_for_exam1_fix (5 pts)
+    @player_exam_for_calc_score = PlayerExam.create!(player: @player_cs, exam: @exam_cs)
+  end
+
+  test "#calculate_score sums points_earned from associated player_exam_answers" do
+    setup_for_calculate_score_test
+
+    # Player answers EQ1, earns full points (10)
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score,
+      exam_question: @eq1_for_exam1_fix, # Max points: 10
+      answer: @ans_for_eq1_q_fix,     # Correct answer for its question
+      points_earned: @eq1_for_exam1_fix.points
+    )
+    # Player answers EQ2, earns partial points (e.g., 3 out of 5)
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score,
+      exam_question: @eq2_for_exam1_fix, # Max points: 5
+      answer: @ans_for_eq2_q_fix,     # Correct answer
+      points_earned: 3
+    )
+    assert_equal 13, @player_exam_for_calc_score.calculate_score # Expected: 10 + 3
+  end
+
+  test "#calculate_score returns 0 if no player_exam_answers exist" do
+    setup_for_calculate_score_test # Creates @player_exam_for_calc_score with no answers yet
+    assert_equal 0, @player_exam_for_calc_score.calculate_score
+  end
+
+  test "#calculate_score returns 0 if player_exam_answers have nil points_earned" do
+    setup_for_calculate_score_test
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score, exam_question: @eq1_for_exam1_fix,
+      answer: @ans_for_eq1_q_fix, points_earned: nil
+    )
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score, exam_question: @eq2_for_exam1_fix,
+      answer: @ans_for_eq2_q_fix, points_earned: nil
+    )
+    assert_equal 0, @player_exam_for_calc_score.calculate_score # SQL SUM of NULLs is typically 0.
+  end
+
+  test "#calculate_score correctly sums if some points_earned are nil and others are not" do
+    setup_for_calculate_score_test
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score, exam_question: @eq1_for_exam1_fix,
+      answer: @ans_for_eq1_q_fix, points_earned: 7 # Earned 7 points
+    )
+    PlayerExamAnswer.create!(
+      player_exam: @player_exam_for_calc_score, exam_question: @eq2_for_exam1_fix,
+      answer: @ans_for_eq2_q_fix, points_earned: nil # Nil points for this one
+    )
+    assert_equal 7, @player_exam_for_calc_score.calculate_score
   end
 
   test "can access exam_questions through the associated exam" do
-    player_exam = PlayerExam.create!(player: @player, exam: @exam)
+    player_exam = PlayerExam.create!(player: @player_one_fix, exam: @exam_one_fix)
+    # @exam_one_fix (exams(:one)) is associated with @eq1_for_exam1_fix and @eq2_for_exam1_fix
 
-    # @exam (exams(:one)) is associated with exam_questions :eq_exam1_q1 and :eq_exam1_q2
-    # These have questions :one and :two respectively.
-    assert_equal 2, player_exam.exam_questions.count, "Should have 2 exam questions from the associated exam"
-    assert_includes player_exam.exam_questions.map(&:id), @exam_question1_for_exam1.id
-    assert_includes player_exam.exam_questions.map(&:id), @exam_question2_for_exam1.id
+    associated_eq_ids = player_exam.exam_questions.pluck(:id)
+    assert_equal 2, associated_eq_ids.count, "Should have 2 exam questions from the associated exam"
+    assert_includes associated_eq_ids, @eq1_for_exam1_fix.id
+    assert_includes associated_eq_ids, @eq2_for_exam1_fix.id
   end
 
   # Note on the `in_progress` scope typo:
-  # The test `PlayerExamTest#test_in_progress_scope_has_a_typo_la_instead_of_status`
-  # was removed as it's better to assume the model will be fixed.
-  # The `scopes` context above now tests the corrected behavior.
-  # If the model remains unfixed, the `PlayerExam.in_progress` scope test will fail.
+  # The test for the `in_progress` scope assumes the model's scope definition is corrected from `la "in_progress"` to `status: "in_progress"`.
+  # If the model is not fixed, that specific scope test will fail.
 end

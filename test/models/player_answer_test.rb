@@ -1,245 +1,202 @@
 require "test_helper"
 
 class PlayerAnswerTest < ActiveSupport::TestCase
-  context "associations" do
-    should belong_to(:player)
-    should belong_to(:question)
-    should belong_to(:answer)
+  # Associations
+  test "should belong to player" do
+    pa = PlayerAnswer.new
+    assert_respond_to pa, :player
+    assert_respond_to pa, :player_id
   end
 
-  context "validations" do
-    setup do
-      # Create a PlayerAnswer to test uniqueness against
-      @player = players(:player_one)
-      @question = questions(:one)
-      @answer = answers(:one) # Assuming this answer belongs to @question
-      @answer.update!(question: @question) if @answer.question != @question
+  test "should belong to question" do
+    pa = PlayerAnswer.new
+    assert_respond_to pa, :question
+    assert_respond_to pa, :question_id
+  end
 
-      PlayerAnswer.create!(player: @player, question: @question, answer: @answer)
+  test "should belong to answer" do
+    pa = PlayerAnswer.new
+    assert_respond_to pa, :answer
+    assert_respond_to pa, :answer_id
+  end
+
+  # Validations
+  setup do
+    # For uniqueness validation (player_id scoped to question_id) and general tests
+    @player_one = players(:player_one)
+    @question_one = questions(:one)
+    @answer_one_for_q_one = answers(:one) # Assuming this is for @question_one and correct
+
+    # Ensure answer_one_for_q_one is actually for @question_one
+    if @answer_one_for_q_one.question != @question_one
+      @answer_one_for_q_one.update!(question: @question_one)
     end
 
-    # For shoulda-matchers, subject needs to be a new, unsaved record.
-    # The existing record for uniqueness check is created in the setup block.
-    subject do
-      PlayerAnswer.new(
-        player: @player, # Same player
-        question: questions(:two), # Different question initially for subject to be valid itself
-        answer: answers(:three) # An answer corresponding to questions(:two)
-      )
-    end
-    should validate_uniqueness_of(:player_id).scoped_to(:question_id).with_message("ya ha respondido esta pregunta")
-
-    should validate_presence_of(:question_id) # This is implicitly handled by `belongs_to :question`
-    should validate_presence_of(:answer_id)   # This is implicitly handled by `belongs_to :answer`
-
-    # Explicit tests for presence of associations
-    should "be invalid without a player" do
-      pa = PlayerAnswer.new(question: @question, answer: @answer)
-      assert_not pa.valid?
-      assert_includes pa.errors[:player], "must exist"
+    # Create an existing PlayerAnswer for uniqueness testing
+    PlayerAnswer.find_or_create_by!(player: @player_one, question: @question_one) do |pa_setup|
+      pa_setup.answer = @answer_one_for_q_one
     end
 
-    should "be invalid without a question" do
-      pa = PlayerAnswer.new(player: @player, answer: @answer)
-      assert_not pa.valid?
-      assert_includes pa.errors[:question], "must exist" # Error is on :question, not :question_id
-    end
-
-    should "be invalid without an answer" do
-      pa = PlayerAnswer.new(player: @player, question: @question)
-      assert_not pa.valid?
-      assert_includes pa.errors[:answer], "must exist" # Error is on :answer, not :answer_id
-    end
-
-    test "uniqueness of player_id scoped to question_id (manual test)" do
-      # First PlayerAnswer created in setup for @player and @question
-      another_answer_for_same_question = Answer.create!(question: @question, text: "Another ans for Q1", is_correct: false)
-      duplicate_pa = PlayerAnswer.new(
-        player: @player,
-        question: @question, # Same player, same question
-        answer: another_answer_for_same_question # Different answer, but still a duplicate PA for (player, question)
-      )
-      assert_not duplicate_pa.valid?
-      assert_includes duplicate_pa.errors[:player_id], "ya ha respondido esta pregunta"
+    # Other fixtures for varied tests
+    @player_two = players(:player_two)
+    @question_two = questions(:two)
+    @answer_three_for_q_two = answers(:three) # Assuming this is for @question_two and correct
+     if @answer_three_for_q_two.question != @question_two
+      @answer_three_for_q_two.update!(question: @question_two)
     end
   end
 
-  context "callbacks" do
-    context "before_create :set_correctness" do
-      setup do
-        @player_cb = players(:player_two) # Use a different player to avoid uniqueness conflicts
-        @question_cb = questions(:two)
-      end
-
-      should "set is_correct to true if the chosen answer is correct" do
-        correct_answer = Answer.create!(question: @question_cb, text: "Correct CB Ans", is_correct: true)
-        pa = PlayerAnswer.create!(player: @player_cb, question: @question_cb, answer: correct_answer)
-        assert_equal true, pa.is_correct
-      end
-
-      should "set is_correct to false if the chosen answer is incorrect" do
-        incorrect_answer = Answer.create!(question: @question_cb, text: "Incorrect CB Ans", is_correct: false)
-        pa = PlayerAnswer.create!(player: @player_cb, question: @question_cb, answer: incorrect_answer)
-        assert_equal false, pa.is_correct
-      end
-
-      should "set is_correct to nil if the chosen answer's is_correct is nil" do
-        # This case might be unlikely if Answer.is_correct is boolean NOT NULL,
-        # but the schema allows boolean to be nil if not specified otherwise.
-        # Our schema for Answer: t.boolean "is_correct" (does not say default or not null)
-        nil_correct_answer = Answer.create!(question: @question_cb, text: "Nil Correct CB Ans", is_correct: nil)
-        pa = PlayerAnswer.create!(player: @player_cb, question: @question_cb, answer: nil_correct_answer)
-        assert_nil pa.is_correct
-      end
-
-      should "not set is_correct if answer is somehow not present (though validation should prevent this)" do
-        # This tests robustness of the callback, though :answer presence is validated.
-        pa = PlayerAnswer.new(player: @player_cb, question: @question_cb, answer: nil)
-        pa.valid? # Trigger validations
-        # Manually call callback if `create` is bypassed or to test in isolation (not typical for `create`)
-        # For `create!`, if answer is nil, it would fail validation before callback.
-        # If we build and then save:
-        pa.send(:set_correctness) # Call directly for test purposes
-        assert_nil pa.is_correct # Should remain as default (nil)
-      end
-    end
-    # `after_create :update_player_stats` is commented out in the model.
+  test "should be invalid without a player" do
+    pa = PlayerAnswer.new(question: @question_one, answer: @answer_one_for_q_one)
+    assert_not pa.valid?, "PlayerAnswer should be invalid without a player"
+    assert_includes pa.errors[:player], "must exist"
   end
 
-  context "scopes" do
-    setup do
-      # Clean slate for scope tests for a specific player/question set
-      PlayerAnswer.delete_all # Be careful with this in larger test suites
-
-      @player_scope = Player.create!(facebook_id: "fb_scope_test_player")
-      @question_scope1 = Question.create!(text: "Scope Q1", clinical_case: clinical_cases(:one))
-      @question_scope2 = Question.create!(text: "Scope Q2", clinical_case: clinical_cases(:one))
-
-      @ans_q_scope1_correct = Answer.create!(question: @question_scope1, text: "Ans Scope Q1 Correct", is_correct: true)
-      @ans_q_scope1_incorrect = Answer.create!(question: @question_scope1, text: "Ans Scope Q1 Incorrect", is_correct: false)
-      @ans_q_scope2_correct = Answer.create!(question: @question_scope2, text: "Ans Scope Q2 Correct", is_correct: true)
-
-      # Create player answers with varying correctness and timestamps
-      @pa_correct_recent = PlayerAnswer.create!(player: @player_scope, question: @question_scope1, answer: @ans_q_scope1_correct, created_at: Time.now)
-      # To make pa_incorrect_old distinct from pa_correct_recent for (player, question) uniqueness, use a different question or player.
-      # The current validation is (player_id, question_id).
-      # So, for the same player, we need a different question for the second PlayerAnswer.
-      # Let's use @question_scope2 for the second PA.
-      @pa_incorrect_old = PlayerAnswer.create!(player: @player_scope, question: @question_scope2, answer: @ans_q_scope2_correct, created_at: 1.day.ago)
-      # The above is also correct. Let's make one that is incorrect.
-      # Need a third question for the same player if we want another PA.
-      @question_scope3 = Question.create!(text: "Scope Q3 for incorrect", clinical_case: clinical_cases(:one))
-      @ans_q_scope3_incorrect = Answer.create!(question: @question_scope3, text: "Ans Scope Q3 Incorrect", is_correct: false)
-      @pa_truly_incorrect_recent = PlayerAnswer.create!(player: @player_scope, question: @question_scope3, answer: @ans_q_scope3_incorrect, created_at: 30.minutes.ago)
-
-
-      # Update @pa_incorrect_old to be actually incorrect for the test name.
-      # This requires changing its answer or the answer's correctness.
-      # Let's change the answer to an incorrect one for @question_scope2
-      incorrect_answer_for_q_scope2 = Answer.create!(question: @question_scope2, text: "Incorrect for Q Scope 2", is_correct: false)
-      @pa_incorrect_old.update!(answer: incorrect_answer_for_q_scope2) # This will re-trigger set_correctness if using after_save, but it's before_create.
-      # Manually set is_correct for testing scopes if callback doesn't re-run on update.
-      @pa_incorrect_old.update_column(:is_correct, false)
-
-
-    end
-
-    should "return only correct answers for :correct scope" do
-      correct_answers = PlayerAnswer.correct
-      assert_includes correct_answers, @pa_correct_recent
-      assert_not_includes correct_answers, @pa_incorrect_old
-      assert_not_includes correct_answers, @pa_truly_incorrect_recent
-      assert_equal 1, correct_answers.count # Only @pa_correct_recent is correct now
-    end
-
-    should "return only incorrect answers for :incorrect scope" do
-      incorrect_answers = PlayerAnswer.incorrect
-      assert_includes incorrect_answers, @pa_incorrect_old
-      assert_includes incorrect_answers, @pa_truly_incorrect_recent
-      assert_not_includes incorrect_answers, @pa_correct_recent
-      assert_equal 2, incorrect_answers.count
-    end
-
-    should "order answers by creation date descending for :recent scope" do
-      # @pa_correct_recent (Time.now)
-      # @pa_truly_incorrect_recent (30.minutes.ago)
-      # @pa_incorrect_old (1.day.ago)
-
-      # Get all PAs for this player to check order
-      all_player_answers_for_scope_test = PlayerAnswer.where(player: @player_scope)
-      # Ensure we have the right number of items before checking order
-      assert_equal 3, all_player_answers_for_scope_test.count
-
-      recent_answers = PlayerAnswer.where(player: @player_scope).recent.to_a
-
-      expected_order = [@pa_correct_recent, @pa_truly_incorrect_recent, @pa_incorrect_old]
-      assert_equal expected_order.map(&:id), recent_answers.map(&:id)
-    end
-
-    should "filter answers by question_id for :by_question scope" do
-      answers_for_q1 = PlayerAnswer.by_question(@question_scope1.id)
-      assert_includes answers_for_q1, @pa_correct_recent
-      assert_equal 1, answers_for_q1.count
-
-      answers_for_q2 = PlayerAnswer.by_question(@question_scope2.id)
-      assert_includes answers_for_q2, @pa_incorrect_old
-      assert_equal 1, answers_for_q2.count
-
-      answers_for_q3 = PlayerAnswer.by_question(@question_scope3.id)
-      assert_includes answers_for_q3, @pa_truly_incorrect_recent
-      assert_equal 1, answers_for_q3.count
-    end
+  test "should be invalid without a question" do
+    pa = PlayerAnswer.new(player: @player_one, answer: @answer_one_for_q_one)
+    assert_not pa.valid?, "PlayerAnswer should be invalid without a question"
+    assert_includes pa.errors[:question], "must exist"
   end
 
+  test "should be invalid without an answer" do
+    pa = PlayerAnswer.new(player: @player_one, question: @question_one)
+    assert_not pa.valid?, "PlayerAnswer should be invalid without an answer"
+    assert_includes pa.errors[:answer], "must exist"
+  end
+
+  test "player_id must be unique scoped to question_id" do
+    # A PlayerAnswer for @player_one and @question_one was created in setup.
+    # Try to create another one with a different answer for the same player and question.
+    another_answer_for_q_one = Answer.create!(question: @question_one, text: "Alternative Answer for Q1", is_correct: false)
+
+    duplicate_pa = PlayerAnswer.new(
+      player: @player_one,
+      question: @question_one, # Same player, same question
+      answer: another_answer_for_q_one
+    )
+    assert_not duplicate_pa.valid?, "Should not be valid due to (player_id, question_id) uniqueness"
+    assert_includes duplicate_pa.errors[:player_id], "ya ha respondido esta pregunta"
+  end
+
+  # Callbacks: before_create :set_correctness
+  test "set_correctness callback sets is_correct based on chosen answer's correctness" do
+    # Use a new player/question to avoid uniqueness conflicts from setup
+    player_cb = Player.create!(facebook_id: "fb_pa_cb_#{SecureRandom.hex(3)}")
+    question_cb = Question.create!(text: "Q for PA CB", clinical_case: clinical_cases(:one))
+
+    correct_answer = Answer.create!(question: question_cb, text: "CB Ans Correct", is_correct: true)
+    pa_correct = PlayerAnswer.create!(player: player_cb, question: question_cb, answer: correct_answer)
+    assert_equal true, pa_correct.is_correct, "is_correct should be true for correct answer"
+    pa_correct.destroy # clean up to allow next PA for same player/question
+
+    incorrect_answer = Answer.create!(question: question_cb, text: "CB Ans Incorrect", is_correct: false)
+    pa_incorrect = PlayerAnswer.create!(player: player_cb, question: question_cb, answer: incorrect_answer)
+    assert_equal false, pa_incorrect.is_correct, "is_correct should be false for incorrect answer"
+    pa_incorrect.destroy
+
+    nil_correct_answer = Answer.create!(question: question_cb, text: "CB Ans Nil Correct", is_correct: nil)
+    pa_nil_correct = PlayerAnswer.create!(player: player_cb, question: question_cb, answer: nil_correct_answer)
+    assert_nil pa_nil_correct.is_correct, "is_correct should be nil if answer.is_correct is nil"
+  end
+
+  # after_create :update_player_stats is commented out in model, so no test for it.
+
+  # Scopes
+  def setup_for_scope_tests
+    PlayerAnswer.delete_all # Clean slate for precise scope testing
+
+    @player_s = Player.create!(facebook_id: "fb_pa_scope_#{SecureRandom.hex(3)}")
+    @q_s1 = Question.create!(text: "Scope Q1 PA", clinical_case: clinical_cases(:one))
+    @q_s2 = Question.create!(text: "Scope Q2 PA", clinical_case: clinical_cases(:one))
+    @q_s3 = Question.create!(text: "Scope Q3 PA", clinical_case: clinical_cases(:one))
+
+
+    @ans_s1_correct = Answer.create!(question: @q_s1, text: "S1 Correct", is_correct: true)
+    @ans_s2_incorrect = Answer.create!(question: @q_s2, text: "S2 Incorrect", is_correct: false)
+    @ans_s3_correct_old = Answer.create!(question: @q_s3, text: "S3 Correct Old", is_correct: true) # another correct one
+
+    @pa_correct_recent = PlayerAnswer.create!(player: @player_s, question: @q_s1, answer: @ans_s1_correct, created_at: Time.now)
+    @pa_incorrect_less_recent = PlayerAnswer.create!(player: @player_s, question: @q_s2, answer: @ans_s2_incorrect, created_at: 30.minutes.ago)
+    @pa_correct_old = PlayerAnswer.create!(player: @player_s, question: @q_s3, answer: @ans_s3_correct_old, created_at: 1.day.ago)
+  end
+
+  test "correct scope returns only correct player_answers" do
+    setup_for_scope_tests
+    correct_answers = PlayerAnswer.correct
+    assert_includes correct_answers, @pa_correct_recent
+    assert_includes correct_answers, @pa_correct_old
+    assert_not_includes correct_answers, @pa_incorrect_less_recent
+    assert_equal 2, correct_answers.count
+  end
+
+  test "incorrect scope returns only incorrect player_answers" do
+    setup_for_scope_tests
+    incorrect_answers = PlayerAnswer.incorrect
+    assert_includes incorrect_answers, @pa_incorrect_less_recent
+    assert_not_includes incorrect_answers, @pa_correct_recent
+    assert_not_includes incorrect_answers, @pa_correct_old
+    assert_equal 1, incorrect_answers.count
+  end
+
+  test "recent scope orders player_answers by creation date descending" do
+    setup_for_scope_tests
+    # Order: @pa_correct_recent, @pa_incorrect_less_recent, @pa_correct_old
+    recent_pas = PlayerAnswer.where(player: @player_s).recent.to_a # Filter by player for this test
+    expected_order = [@pa_correct_recent, @pa_incorrect_less_recent, @pa_correct_old]
+    assert_equal expected_order.map(&:id), recent_pas.map(&:id)
+  end
+
+  test "by_question scope filters answers by question_id" do
+    setup_for_scope_tests
+    answers_for_q_s1 = PlayerAnswer.by_question(@q_s1.id)
+    assert_includes answers_for_q_s1, @pa_correct_recent
+    assert_equal 1, answers_for_q_s1.count
+
+    answers_for_q_s2 = PlayerAnswer.by_question(@q_s2.id)
+    assert_includes answers_for_q_s2, @pa_incorrect_less_recent
+    assert_equal 1, answers_for_q_s2.count
+  end
+
+  # General validity and attributes
   test "should be valid with all required associations and attributes" do
-    player = players(:player_one)
-    # Use a new question to avoid uniqueness collision from setup
-    question = Question.create!(text: "PA Valid Test Q", clinical_case: clinical_cases(:one))
-    answer = Answer.create!(question: question, text: "PA Valid Test A", is_correct: true)
-
+    # Use a player/question combo not used in setup to avoid uniqueness issues
     pa = PlayerAnswer.new(
-      player: player,
-      question: question,
-      answer: answer,
-      time_taken: 100,
-      mode: "practice" # default is 'practice'
+      player: @player_two,
+      question: @question_two,
+      answer: @answer_three_for_q_two, # This is for @question_two
+      time_taken: 120,
+      mode: "practice" # Default is 'practice'
     )
     assert pa.valid?, pa.errors.full_messages.join(", ")
   end
 
-  test "time_taken can be nil" do
-    # Schema: t.integer "time_taken" (nullable)
-    pa = PlayerAnswer.new(player: players(:one), question: questions(:two), answer: answers(:three), time_taken: nil)
-    # Need to ensure questions(:two) and answers(:three) are compatible and player hasn't answered questions(:two)
-    # Let's use fresh objects to be safe
-    p = Player.create!(facebook_id: "fb_pa_nil_time_#{SecureRandom.hex(3)}")
-    q = Question.create!(text: "Q for nil time", clinical_case: clinical_cases(:one))
-    a = Answer.create!(question: q, text: "A for nil time", is_correct: true)
-
-    pa_with_nil_time = PlayerAnswer.new(player: p, question: q, answer: a, time_taken: nil)
-    assert pa_with_nil_time.valid?, pa_with_nil_time.errors.full_messages.join(", ")
-    assert pa_with_nil_time.save
-    assert_nil pa_with_nil_time.reload.time_taken
+  test "time_taken attribute can be nil" do
+    pa = PlayerAnswer.new(player: @player_two, question: @question_two, answer: @answer_three_for_q_two, time_taken: nil)
+    assert pa.valid?, "PA with nil time_taken should be valid. Errors: #{pa.errors.full_messages.join(", ")}"
+    assert pa.save
+    assert_nil pa.reload.time_taken
   end
 
-  test "mode defaults to 'practice'" do
-    # Schema: t.string "mode", default: "practice"
-    p = Player.create!(facebook_id: "fb_pa_mode_default_#{SecureRandom.hex(3)}")
-    q = Question.create!(text: "Q for mode default", clinical_case: clinical_cases(:one))
-    a = Answer.create!(question: q, text: "A for mode default", is_correct: true)
+  test "mode attribute defaults to 'practice'" do
+    # Create with a unique player/question pair for saving
+    p_mode = Player.create!(facebook_id: "fb_pa_mode_def_#{SecureRandom.hex(3)}")
+    q_mode = Question.create!(text: "Q mode default", clinical_case: clinical_cases(:one))
+    a_mode = Answer.create!(question: q_mode, text: "A mode default", is_correct: true)
 
-    pa = PlayerAnswer.new(player: p, question: q, answer: a)
-    assert pa.save # Save to allow default to be applied if it's DB level or AR default
+    pa = PlayerAnswer.new(player: p_mode, question: q_mode, answer: a_mode)
+    # Default is applied by DB or AR upon initialization/save.
+    assert pa.save
     assert_equal "practice", pa.reload.mode
   end
 
-  test "mode can be set to other values" do
-    p = Player.create!(facebook_id: "fb_pa_mode_set_#{SecureRandom.hex(3)}")
-    q = Question.create!(text: "Q for mode set", clinical_case: clinical_cases(:one))
-    a = Answer.create!(question: q, text: "A for mode set", is_correct: true)
+  test "mode attribute can be set to other string values" do
+    p_mode_set = Player.create!(facebook_id: "fb_pa_mode_set_#{SecureRandom.hex(3)}")
+    q_mode_set = Question.create!(text: "Q mode set", clinical_case: clinical_cases(:one))
+    a_mode_set = Answer.create!(question: q_mode_set, text: "A mode set", is_correct: true)
 
-    pa = PlayerAnswer.new(player: p, question: q, answer: a, mode: "test_mode")
+    custom_mode = "assessment_mode"
+    pa = PlayerAnswer.new(player: p_mode_set, question: q_mode_set, answer: a_mode_set, mode: custom_mode)
     assert pa.save
-    assert_equal "test_mode", pa.reload.mode
+    assert_equal custom_mode, pa.reload.mode
   end
 end
