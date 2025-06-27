@@ -9,10 +9,10 @@ module Players
       @achievements = @player.achievements.includes(:player_achievements)
 
       render json: @achievements.as_json(
-        except: [:created_at, :updated_at, :criteria], # Excluir criteria del logro base
+        except: [ :created_at, :updated_at, :criteria ], # Excluir criteria del logro base
         include: {
           player_achievements: {
-            only: [:achieved_at, :progress], # Solo mostrar cuándo se logró y el progreso
+            only: [ :achieved_at, :progress ] # Solo mostrar cuándo se logró y el progreso
             # Asegurarse de que solo se incluya el player_achievement del jugador actual
             # Esto se maneja por la consulta @player.achievements que ya filtra por el jugador.
           }

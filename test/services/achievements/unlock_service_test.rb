@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 module Achievements
   class UnlockServiceTest < ActiveSupport::TestCase
@@ -64,7 +64,7 @@ module Achievements
       # Ensure the player has no achievements before this specific test part
       PlayerAchievement.where(player: @player).destroy_all
 
-      expected_unlocks = [@ach_exams_1, @ach_exams_5]
+      expected_unlocks = [ @ach_exams_1, @ach_exams_5 ]
 
       assert_difference "PlayerAchievement.count", expected_unlocks.size do
         unlocked = Achievements::UnlockService.new(@player).call
@@ -204,6 +204,5 @@ module Achievements
         pass "Skipping test: min_exams_in_category for 'Maestro de Urgencias' is not greater than 1."
       end
     end
-
   end
 end

@@ -1,7 +1,7 @@
 require "test_helper"
 
 class PlayerExamAnswerTest < ActiveSupport::TestCase
-  fixtures :exams, :players, :categories, :clinical_cases, :questions, :answers, :player_exams, :exam_questions
+  fixtures :categories, :exams, :players, :clinical_cases, :questions, :answers, :player_exams, :exam_questions
   # Associations
   test "should belong to player_exam" do
     pea = PlayerExamAnswer.new
@@ -24,9 +24,10 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
   # Validations
   setup do
     # For uniqueness validation (player_exam_id, exam_question_id) and general tests
-    @player_exam_one = player_exams(:player_one_exam_one) # Fixture: player_one on exam_one
+    @player_exam_one = player_exams(:pe_one_exam_urgencias) # Fixture: player_one on exam_one
     @eq1_exam1 = exam_questions(:eq_one_q_one) # Fixture: for exam_one & question_one
     @answer_for_eq1 = answers(:one) # Fixture: for question_one (which is @eq1_exam1.question)
+    @category = categories(:one)
 
     # Ensure answer is compatible with the exam_question's question
     if @answer_for_eq1.question != @eq1_exam1.question
@@ -96,7 +97,7 @@ class PlayerExamAnswerTest < ActiveSupport::TestCase
   test "attributes is_correct and points_earned can be nil upon creation" do
     # Use a completely new set of PlayerExam, ExamQuestion, Answer to ensure no conflicts.
     player_new = Player.create!(facebook_id: "fb_pea_nilattr_#{SecureRandom.hex(3)}")
-    exam_new = Exam.create!(name: "PEA Nil Attr Exam")
+    exam_new = Exam.create!(name: "PEA Nil Attr Exam", category: @category)
     pe_new = PlayerExam.create!(player: player_new, exam: exam_new)
 
     question_new = Question.create!(text: "PEA Nil Attr Q", clinical_case: clinical_cases(:one))

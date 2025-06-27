@@ -16,7 +16,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     # Ensure exams(:one) is valid and has associated exam_questions in fixtures.
     # The fixtures yml files are the source of truth for these associations.
 
-    @existing_exam = exams(:exam_one) # Changed from exams(:one)
+    @existing_exam = exams(:exam_one_urgencias) # Changed from exams(:one)
 
     # Ensure @question1 and @question2 are valid for use in @valid_exam_attrs
     # If they might be nil due to sparse fixtures, this setup might need adjustment,

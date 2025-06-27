@@ -2,7 +2,7 @@
 
 # Player 'one' (Player Fixture One) takes 'exam_one_urgencias'
 pe_one_exam_urgencias:
-  player: one  # Must match a label in players.yml
+  player: player_one  # Must match a label in players.yml
   exam: exam_one_urgencias # Must match a label in exams.yml
   score: 85
   completed_at: <%= Time.current - 1.day %>
@@ -11,7 +11,7 @@ pe_one_exam_urgencias:
 
 # Player 'two' (Player Fixture Two) takes 'exam_two_cardiologia'
 pe_two_exam_cardio:
-  player: two # Must match a label in players.yml
+  player: player_two # Must match a label in players.yml
   exam: exam_two_cardiologia # Must match a label in exams.yml
   score: 92
   completed_at: <%= Time.current - 2.days %>

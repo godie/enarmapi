@@ -1,12 +1,12 @@
 # test/fixtures/players.yml
-one: # Renamed from player_one to match default naming in PlayerAchievement fixture
+player_one: # Renamed from player_one to match default naming in PlayerAchievement fixture
   name: "Player Fixture One"
   email: "playerfixtureone@example.com"
   facebook_id: "fb_player_fixture_one_unique_id"
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 
-two: # Renamed from player_two to match default naming
+player_two: # Renamed from player_two to match default naming
   name: "Player Fixture Two"
   email: "playerfixturetwo@example.com"
   facebook_id: "fb_player_fixture_two_unique_id"

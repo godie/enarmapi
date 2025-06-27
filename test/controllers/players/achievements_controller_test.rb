@@ -5,7 +5,7 @@ module Players
     fixtures :players, :achievements, :player_achievements, :categories
 
     setup do
-      @player = players(:one)
+      @player = players(:player_one)
       assert_not_nil @player, "Fixture players(:one) not loaded."
       @achievement1 = achievements(:exams_completed_1)
       assert_not_nil @achievement1, "Fixture achievements(:exams_completed_1) not loaded."
@@ -87,7 +87,7 @@ module Players
     end
 
     test "should return 404 if player not found" do
-      get player_achievements_url(player_id: 'non_existent_player_id'), as: :json
+      get player_achievements_url(player_id: "non_existent_player_id"), as: :json
       assert_response :not_found
 
       response_json = JSON.parse(response.body)

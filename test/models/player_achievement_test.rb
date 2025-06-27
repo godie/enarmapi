@@ -5,7 +5,7 @@ class PlayerAchievementTest < ActiveSupport::TestCase
 
   def setup
     # Use a player and achievement combination that is NOT in player_achievements.yml for most creation tests
-    @player_for_new_ach = players(:two)
+    @player_for_new_ach = players(:player_two)
     @achievement_for_new_ach = achievements(:exams_completed_5) # Assuming player two hasn't earned exams_completed_5 via fixtures
 
     # For tests that rely on an existing PlayerAchievement, use the one from fixtures
