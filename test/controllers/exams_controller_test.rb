@@ -6,6 +6,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @admin_user = users(:admin)
     @auth_headers = admin_auth_headers(@admin_user)
+    @category = categories(:one)
 
     # Questions to be used for exam associations
     @question1 = questions(:one) # From questions.yml
@@ -16,7 +17,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     # Ensure exams(:one) is valid and has associated exam_questions in fixtures.
     # The fixtures yml files are the source of truth for these associations.
 
-    @existing_exam = exams(:exam_one) # Changed from exams(:one)
+    @existing_exam = exams(:exam_one_urgencias) # Changed from exams(:one)
 
     # Ensure @question1 and @question2 are valid for use in @valid_exam_attrs
     # If they might be nil due to sparse fixtures, this setup might need adjustment,
@@ -38,6 +39,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
     @valid_exam_attrs = {
       name: "New Comprehensive Exam",
       description: "A detailed exam covering various topics.",
+      category_id: @category.id,
       # available_from: Time.current, # Removed
       # available_to: 1.month.from_now, # Removed
       exam_questions_attributes: [
@@ -181,7 +183,7 @@ class ExamsControllerTest < ActionDispatch::IntegrationTest
 
   test "should destroy exam and its exam_questions when authenticated" do
     # Create a dedicated exam for this test to avoid fixture interference
-    exam_to_destroy = Exam.create!(name: "To Be Deleted Exam", description: "Delete this one.")
+    exam_to_destroy = Exam.create!(name: "To Be Deleted Exam", description: "Delete this one.", category: categories(:one))
     ExamQuestion.create!(exam: exam_to_destroy, question: @question1, points: 10, position: 1)
     ExamQuestion.create!(exam: exam_to_destroy, question: @question2, points: 5, position: 2)
 

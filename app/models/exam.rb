@@ -1,4 +1,6 @@
 class Exam < ApplicationRecord
+  belongs_to :category # Added this line
+
   has_many :exam_questions, -> { order(:position) }, dependent: :destroy, inverse_of: :exam
   has_many :questions, through: :exam_questions
   has_many :player_exams, dependent: :destroy # Assuming player_exams should also be destroyed

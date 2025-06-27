@@ -1,6 +1,6 @@
 # test/fixtures/exam_questions.yml
 eq_one_q_one:
-  exam: exam_one # References exam_one from exams.yml
+  exam: exam_one_urgencias # References exam_one from exams.yml
   question: one    # References question one from questions.yml
   position: 1
   points: 10
@@ -8,7 +8,7 @@ eq_one_q_one:
   updated_at: <%= Time.zone.now %>
 
 eq_one_q_two:
-  exam: exam_one # References exam_one from exams.yml
+  exam: exam_one_urgencias # References exam_one from exams.yml
   question: two    # References question two from questions.yml
   position: 2
   points: 15
@@ -16,7 +16,7 @@ eq_one_q_two:
   updated_at: <%= Time.zone.now %>
 
 eq_two_q_three:
-  exam: exam_two # References exam_two from exams.yml
+  exam: exam_two_cardiologia # References exam_two from exams.yml
   question: three  # References question three from questions.yml
   position: 1
   points: 20

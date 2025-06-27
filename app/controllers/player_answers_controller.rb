@@ -21,7 +21,17 @@ class PlayerAnswersController < ApplicationController
     end
 
     if successful_saves
-      render json: { message: "Answers saved successfully!", ids: @player_answers_records.map(&:id) }, status: :created
+      # Attempt to unlock achievements after successfully saving answers
+      unlocked_achievements = Achievements::UnlockService.new(@current_player).call
+
+      response_message = "Answers saved successfully!"
+      response_message += " You've unlocked #{unlocked_achievements.count} new achievement(s)!" if unlocked_achievements.any?
+
+      render json: {
+        message: response_message,
+        player_answer_ids: @player_answers_records.map(&:id),
+        unlocked_achievements: unlocked_achievements.map { |ach| { id: ach.id, name: ach.name } }
+      }, status: :created
     else
       render json: { errors: @errors || "Some answers could not be saved." }, status: :unprocessable_entity
     end

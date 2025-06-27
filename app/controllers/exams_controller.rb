@@ -51,6 +51,7 @@ class ExamsController < ApplicationController
     params.require(:exam).permit(
       :name,
       :description,
+      :category_id,
       # :available_from, # Removed as not an attribute of Exam model
       # :available_to,   # Removed as not an attribute of Exam model
       exam_questions_attributes: [

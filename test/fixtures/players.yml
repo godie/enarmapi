@@ -1,15 +1,23 @@
 # test/fixtures/players.yml
-player_one:
-  name: "Player One"
-  email: "playerone@example.com"
-  facebook_id: "fb_player_one_unique_id"
+player_one: # Renamed from player_one to match default naming in PlayerAchievement fixture
+  name: "Player Fixture One"
+  email: "playerfixtureone@example.com"
+  facebook_id: "fb_player_fixture_one_unique_id"
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 
-player_two:
-  name: "Player Two"
-  email: "playertwo@example.com"
-  facebook_id: "fb_player_two_unique_id"
+player_two: # Renamed from player_two to match default naming
+  name: "Player Fixture Two"
+  email: "playerfixturetwo@example.com"
+  facebook_id: "fb_player_fixture_two_unique_id"
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+# Player for achievement service testing
+player_for_achievements:
+  name: "Achiever Player"
+  email: "achiever@example.com"
+  facebook_id: "fb_achiever_player_id"
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
 

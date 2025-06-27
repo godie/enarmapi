@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_16_180211) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_26_195722) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "achievements", force: :cascade do |t|
+    t.string "name"
+    t.text "description"
+    t.jsonb "criteria"
+    t.string "icon_url"
+    t.integer "points"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "answers", force: :cascade do |t|
     t.string "text"
@@ -60,6 +70,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_16_180211) do
     t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "category_id", null: false
+    t.index ["category_id"], name: "index_exams_on_category_id"
+  end
+
+  create_table "player_achievements", force: :cascade do |t|
+    t.bigint "player_id", null: false
+    t.bigint "achievement_id", null: false
+    t.datetime "achieved_at"
+    t.jsonb "progress"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["achievement_id"], name: "index_player_achievements_on_achievement_id"
+    t.index ["player_id"], name: "index_player_achievements_on_player_id"
   end
 
   create_table "player_answers", force: :cascade do |t|
@@ -133,6 +156,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_16_180211) do
   add_foreign_key "clinical_cases", "categories"
   add_foreign_key "exam_questions", "exams"
   add_foreign_key "exam_questions", "questions"
+  add_foreign_key "exams", "categories"
+  add_foreign_key "player_achievements", "achievements"
+  add_foreign_key "player_achievements", "players"
   add_foreign_key "player_answers", "answers"
   add_foreign_key "player_answers", "players"
   add_foreign_key "player_answers", "questions"

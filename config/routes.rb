@@ -17,6 +17,11 @@ Rails.application.routes.draw do
 
   resources :exams
 
+  resources :achievements, only: [ :index ]
+  resources :players do
+    resources :achievements, only: [ :index ], controller: "players/achievements"
+  end
+
   # Defines the root path route ("/")
   # root "posts#index"
 end

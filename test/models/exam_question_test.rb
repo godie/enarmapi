@@ -25,10 +25,11 @@ class ExamQuestionTest < ActiveSupport::TestCase
   # Validations
   setup do
     # For uniqueness validation and general tests
-    @exam_one = exams(:exam_one)
-    @exam_two = exams(:exam_two)
+    @exam_one = exams(:exam_one_urgencias)
+    @exam_two = exams(:exam_two_cardiologia)
     @question_one = questions(:one)
     @question_two = questions(:two) # Another question for the same exam
+    @category = categories(:one)
   end
 
   test "should be invalid without an exam" do
@@ -44,7 +45,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
   end
 
   test "question_id must be unique scoped to exam_id" do
-    test_exam = Exam.create!(name: "Unique Test Exam #{SecureRandom.hex(4)}")
+    test_exam = Exam.create!(name: "Unique Test Exam #{SecureRandom.hex(4)}", category: @category)
     test_question = Question.create!(text: "Unique Test Question #{SecureRandom.hex(4)}", clinical_case: clinical_cases(:one))
     valid_exam_question = ExamQuestion.create!(
       exam: test_exam,
@@ -89,7 +90,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
 
   test "points attribute can be nil (if schema allows and no model validation)" do
     # Schema: t.integer "points" (nullable)
-    test_exam_for_nil_points = Exam.create!(name: "Nil Points Exam")
+    test_exam_for_nil_points = Exam.create!(name: "Nil Points Exam", category: @category)
     test_question_for_nil_points = Question.create!(text: "Nil Points Question", clinical_case: clinical_cases(:one))
     exam_question = ExamQuestion.new(exam: test_exam_for_nil_points, question: test_question_for_nil_points, position: 1, points: nil)
     assert exam_question.valid?, "Points being nil should be valid. Errors: #{exam_question.errors.full_messages.join(", ")}"
@@ -99,7 +100,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
 
   test "destroying an ExamQuestion does not destroy its associated Exam or Question" do
     # Create fresh, un-fixture records for this specific test to avoid side effects.
-    test_exam = Exam.create!(name: "EQ Deletion Test - Exam")
+    test_exam = Exam.create!(name: "EQ Deletion Test - Exam", category: @category)
     # Ensure clinical_case exists for the question
     cc = clinical_cases(:one) ? clinical_cases(:one) : ClinicalCase.create!(name: "Temp CC", category: categories(:one), description: "d")
     test_question = Question.create!(text: "EQ Deletion Test - Question", clinical_case: cc)

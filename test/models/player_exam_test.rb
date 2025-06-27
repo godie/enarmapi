@@ -1,7 +1,7 @@
 require "test_helper"
 
 class PlayerExamTest < ActiveSupport::TestCase
-  fixtures :players, :exams, :exam_questions, :answers
+  fixtures :players, :exams, :exam_questions, :answers, :categories
   # Associations
   test "should belong to player" do
     pe = PlayerExam.new
@@ -28,7 +28,7 @@ class PlayerExamTest < ActiveSupport::TestCase
 
   # Validations
   test "should be invalid without a player" do
-    player_exam = PlayerExam.new(exam: exams(:exam_one))
+    player_exam = PlayerExam.new(exam: exams(:exam_one_urgencias))
     assert_not player_exam.valid?, "PlayerExam should be invalid without a player"
     assert_includes player_exam.errors[:player], "must exist"
   end
@@ -43,7 +43,7 @@ class PlayerExamTest < ActiveSupport::TestCase
   # General setup for tests that don't need isolated scope/method data
   setup do
     @player_one_fix = players(:player_one)
-    @exam_one_fix = exams(:exam_one) # Fixture: "Cardiology Basics"
+    @exam_one_fix = exams(:exam_one_urgencias) # Fixture: "Cardiology Basics"
     # exam_questions.yml links to @exam_one_fix:
     # eq_exam1_q1 (q: questions(:one), points: 10)
     # eq_exam1_q2 (q: questions(:two), points: 5)
@@ -81,9 +81,10 @@ class PlayerExamTest < ActiveSupport::TestCase
     PlayerExam.delete_all # Clean slate for precise scope tests
 
     @player_s = Player.create!(facebook_id: "fb_pe_scope_#{SecureRandom.hex(3)}")
-    @exam_s1 = Exam.create!(name: "Scope Exam PE1")
-    @exam_s2 = Exam.create!(name: "Scope Exam PE2")
-    @exam_s3 = Exam.create!(name: "Scope Exam PE3") # exams(:two) could also be used if distinct
+    @category = categories(:one)
+    @exam_s1 = Exam.create!(name: "Scope Exam PE1", category: @category)
+    @exam_s2 = Exam.create!(name: "Scope Exam PE2", category: @category)
+    @exam_s3 = Exam.create!(name: "Scope Exam PE3", category: @category) # exams(:two) could also be used if distinct
 
     @pe_completed_scope = PlayerExam.create!(player: @player_s, exam: @exam_s1, status: "completed", score: 85, completed_at: 1.hour.ago)
     @pe_in_progress_scope = PlayerExam.create!(player: @player_s, exam: @exam_s2, status: "in_progress", started_at: 30.minutes.ago)
@@ -122,7 +123,7 @@ class PlayerExamTest < ActiveSupport::TestCase
   def setup_for_calculate_score_test
     @player_cs = Player.create!(facebook_id: "fb_pe_cs_#{SecureRandom.hex(3)}")
     # Use an exam with known ExamQuestions and points
-    @exam_cs = exams(:exam_one) # This exam has @eq1_for_exam1_fix (10 pts) and @eq2_for_exam1_fix (5 pts)
+    @exam_cs = exams(:exam_one_urgencias) # This exam has @eq1_for_exam1_fix (10 pts) and @eq2_for_exam1_fix (5 pts)
     @player_exam_for_calc_score = PlayerExam.create!(player: @player_cs, exam: @exam_cs)
   end
 

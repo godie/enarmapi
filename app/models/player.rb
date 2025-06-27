@@ -7,6 +7,9 @@ class Player < ApplicationRecord
   has_many :player_exams
   has_many :taken_exams, through: :player_exams, source: :exam
 
+  has_many :player_achievements, dependent: :destroy
+  has_many :achievements, through: :player_achievements
+
   # Validaciones
   validates :facebook_id, presence: true, uniqueness: true
   validates :email, format: { with: VALID_EMAIL_REGEX }, allow_blank: true
