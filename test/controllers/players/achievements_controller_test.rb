@@ -71,8 +71,14 @@ module Players
         assert ach_json.key?("description")
         assert ach_json.key?("icon_url")
         assert ach_json.key?("points")
-        assert ach_json.key?("achieved_at")
-        assert ach_json.key?("progress")
+        assert ach_json.key?("player_achievements")
+        assert_instance_of Array, ach_json["player_achievements"]
+        assert_not ach_json["player_achievements"].empty?
+        first_player_achievement = ach_json["player_achievements"].first
+        assert_instance_of Hash, first_player_achievement
+
+        assert first_player_achievement.key?("achieved_at")
+        assert first_player_achievement.key?("progress")
 
         assert_not ach_json.key?("criteria")
         assert_not ach_json.key?("created_at")
@@ -95,7 +101,7 @@ module Players
     end
 
     test "should return empty list if player has no achievements" do
-      player_without_achievements = players(:two) # Assuming :two has no achievements
+      player_without_achievements = players(:player_two) # Assuming :two has no achievements
       PlayerAchievement.where(player: player_without_achievements).destroy_all # Ensure
 
       get player_achievements_url(player_id: player_without_achievements.id), as: :json
