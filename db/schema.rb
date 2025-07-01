@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_26_195722) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -137,9 +137,11 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_26_195722) do
 
   create_table "questions", force: :cascade do |t|
     t.text "text"
-    t.bigint "clinical_case_id", null: false
+    t.bigint "clinical_case_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "category_id"
+    t.index ["category_id"], name: "index_questions_on_category_id"
     t.index ["clinical_case_id"], name: "index_questions_on_clinical_case_id"
   end
 
@@ -167,5 +169,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_26_195722) do
   add_foreign_key "player_exam_answers", "player_exams"
   add_foreign_key "player_exams", "exams"
   add_foreign_key "player_exams", "players"
+  add_foreign_key "questions", "categories"
   add_foreign_key "questions", "clinical_cases"
 end

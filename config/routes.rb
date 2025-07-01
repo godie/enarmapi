@@ -8,9 +8,9 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   resources :categories
-  resources :clinical_cases do
-    resources :questions
-  end
+  resources :clinical_cases
+  # Questions are now a top-level resource
+  resources :questions
 
   post "player_answers", to: "player_answers#create"
   get "player_answers", to: "player_answers#index"
