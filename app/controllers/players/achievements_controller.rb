@@ -33,7 +33,7 @@ module Players
     private
 
     def set_player
-      @player = Player.find_by(id: params[:player_id])
+      @player = Player.find_by(facebook_id: params[:player_id])
       render json: { error: "Player not found" }, status: :not_found unless @player
     end
   end

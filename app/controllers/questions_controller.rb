@@ -1,40 +1,60 @@
 class QuestionsController < ApplicationController
   before_action :authenticate_admin!
-  before_action :set_clinical_case
   before_action :set_question, only: [ :show, :update, :destroy ]
 
-  # GET /clinical_cases/:clinical_case_id/questions
+  # GET /questions
+  # GET /questions?clinical_case_id=:clinical_case_id
+  # GET /questions?category_id=:category_id
   def index
-    @questions = @clinical_case.questions
-    render json: @questions, include: [ :answers ]
+    if params[:clinical_case_id]
+      @clinical_case = ClinicalCase.find_by(id: params[:clinical_case_id])
+      if @clinical_case
+        @questions = @clinical_case.questions
+      else
+        return render json: { error: "ClinicalCase not found" }, status: :not_found
+      end
+    elsif params[:category_id]
+      @category = Category.find_by(id: params[:category_id])
+      if @category
+        # Use the scope defined in Question model
+        @questions = Question.by_category(params[:category_id])
+      else
+        return render json: { error: "Category not found" }, status: :not_found
+      end
+    else
+      # Consider pagination for listing all questions
+      @questions = Question.all
+    end
+    render json: @questions, include: [ :answers, :category, :clinical_case ]
   end
 
-  # GET /clinical_cases/:clinical_case_id/questions/:id
+  # GET /questions/:id
   def show
-    render json: @question, include: [ :answers ]
+    render json: @question, include: [ :answers, :category, :clinical_case ]
   end
 
-  # POST /clinical_cases/:clinical_case_id/questions
+  # POST /questions
   def create
-    @question = @clinical_case.questions.new(question_params)
+    # ClinicalCase association is now optional, can also be associated directly with a category
+    @question = Question.new(question_params)
 
     if @question.save
-      render json: @question, status: :created, location: clinical_case_question_url(@clinical_case, @question), include: [ :answers ]
+      render json: @question, status: :created, location: question_url(@question), include: [ :answers, :category, :clinical_case ]
     else
       render json: @question.errors, status: :unprocessable_entity
     end
   end
 
-  # PATCH/PUT /clinical_cases/:clinical_case_id/questions/:id
+  # PATCH/PUT /questions/:id
   def update
     if @question.update(question_params)
-      render json: @question
+      render json: @question, include: [ :answers, :category, :clinical_case ]
     else
       render json: @question.errors, status: :unprocessable_entity
     end
   end
 
-  # DELETE /clinical_cases/:clinical_case_id/questions/:id
+  # DELETE /questions/:id
   def destroy
     @question.destroy
     head :no_content
@@ -42,14 +62,8 @@ class QuestionsController < ApplicationController
 
   private
 
-  def set_clinical_case
-    @clinical_case = ClinicalCase.find(params[:clinical_case_id])
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: "ClinicalCase not found" }, status: :not_found
-  end
-
   def set_question
-    @question = @clinical_case.questions.find(params[:id])
+    @question = Question.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Question not found" }, status: :not_found
   end
@@ -57,8 +71,8 @@ class QuestionsController < ApplicationController
   def question_params
     params.require(:question).permit(
       :text,
-      # :explanation, # Removed, not an attribute
-      # :points,      # Removed, not an attribute
+      :clinical_case_id, # Added
+      :category_id,      # Added
       answers_attributes: [
         :id,
         :_destroy,

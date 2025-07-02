@@ -42,7 +42,7 @@ module Players
       assert PlayerAchievement.find_by(player_id: @player.id, achievement_id: @achievement1.id), "PlayerAchievement link not found in DB for player #{@player.id} and achievement #{@achievement1.id} before GET."
 
 
-      get player_achievements_url(player_id: @player.id), as: :json
+      get player_achievements_url(player_id: @player.facebook_id), as: :json
       assert_response :success, "Response was not success. Body: #{response.body}"
 
       response_json = JSON.parse(response.body)
@@ -104,7 +104,7 @@ module Players
       player_without_achievements = players(:player_two) # Assuming :two has no achievements
       PlayerAchievement.where(player: player_without_achievements).destroy_all # Ensure
 
-      get player_achievements_url(player_id: player_without_achievements.id), as: :json
+      get player_achievements_url(player_id: player_without_achievements.facebook_id), as: :json
       assert_response :success
 
       response_json = JSON.parse(response.body)
