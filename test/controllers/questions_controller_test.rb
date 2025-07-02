@@ -20,7 +20,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     # Create a standalone question if one doesn't exist or ensure it's correctly set up
     @standalone_question = Question.find_by(text: "Standalone Question Test")
     if @standalone_question.nil?
-      @standalone_question = Question.create!(text: "Standalone Question Test", category: @category_two, answers_attributes: [{text: "Ans SA", is_correct: true}])
+      @standalone_question = Question.create!(text: "Standalone Question Test", category: @category_two, answers_attributes: [ { text: "Ans SA", is_correct: true } ])
     else
       @standalone_question.update!(category: @category_two, clinical_case_id: nil)
     end
@@ -110,7 +110,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get index of questions filtered by category_id (includes CC and standalone)" do
-    sa_q_in_cat_one = Question.create!(text: "SA in Cat One for Filter Test", category: @category_one, answers_attributes: [{text:"a", is_correct:true}])
+    sa_q_in_cat_one = Question.create!(text: "SA in Cat One for Filter Test", category: @category_one, answers_attributes: [ { text: "a", is_correct: true } ])
     cc_question_in_cat_one = @clinical_case_one.questions.first # This is @existing_question_in_cc
 
     get questions_url(category_id: @category_one.id), headers: @auth_headers, as: :json

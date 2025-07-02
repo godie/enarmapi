@@ -1,7 +1,7 @@
 require "test_helper"
 
 class PlayerAnswerTest < ActiveSupport::TestCase
-  fixtures :players, :questions, :answers, :clinical_cases
+  fixtures :players, :categories, :questions, :answers, :clinical_cases
 
   # Associations
   test "should belong to player" do
