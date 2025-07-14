@@ -18,7 +18,7 @@ gem "puma", ">= 5.0"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 
 gem "bcrypt", "~> 3.1.20"
-gem "jwt", "~> 3.0"
+gem "jwt", "~> 2.8.0"
 
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
@@ -34,6 +34,7 @@ gem "bootsnap", require: false
 gem "rack-cors"
 
 gem "will_paginate"
+gem "gemini-ai"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -49,4 +50,5 @@ end
 group :test do
   gem "simplecov", require: false
   gem "database_cleaner-active_record"
+  gem "webmock"
 end
