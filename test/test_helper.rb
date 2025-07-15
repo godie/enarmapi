@@ -1,5 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 require "simplecov"
+require "mocha/minitest"
+require "minitest/mock"
 
 SimpleCov.start "rails" do
   add_group "Models", "app/models"

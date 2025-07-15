@@ -1,4 +1,4 @@
-require_relative '../services/generative_ai_service'
+require_relative "../services/generative_ai_service"
 class AiController < ApplicationController
     before_action :authenticate_admin!
     def generate_question

@@ -7,13 +7,12 @@ class PlayersController < ApplicationController
   # GET /players
   def index
     @players = Player.all
-
     render json: @players
   end
 
   # GET /players/1
   def show
-    render json: player_json(@player) if @current_player.id == params[:id]
+    return render json: player_json(@player) if params[:id] == @current_player.id.to_s
     render json: { error: "No autorizado" }, status: :unauthorized
   end
 

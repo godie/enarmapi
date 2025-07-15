@@ -1,10 +1,12 @@
 require "test_helper"
 
 class PlayersControllerTest < ActionDispatch::IntegrationTest
-  fixtures :players # Added fixture loading
+  fixtures :players, :users # Added fixture loading
 
   setup do
     @player = players(:player_one) # Corrected fixture label
+    @admin_user = users(:admin) # From users.yml
+    @auth_headers = admin_auth_headers(@admin_user)
   end
 
   test "should get unauthorized on index without token" do
@@ -38,5 +40,20 @@ class PlayersControllerTest < ActionDispatch::IntegrationTest
   test "should get unauthorized on update without token destroy player" do
     delete player_url(@player), as: :json
     assert_response :unauthorized
+  end
+
+  test "should get all players" do
+    get players_url, headers: @auth_headers, as: :json
+    assert_response :success
+    response_json = JSON.parse(response.body)
+    assert_not_empty(response_json)
+  end
+
+  test "should return player info" do
+    @player_headers = player_auth_headers(@player)
+    get player_url(@player), headers: @player_headers, as: :json
+    assert_response :success
+    response_json = JSON.parse(response.body)
+    assert_not_empty(response_json)
   end
 end
