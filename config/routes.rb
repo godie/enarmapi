@@ -24,4 +24,6 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+  post "ai/generate_question", to: "ai#generate_question"
+  post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
 end
