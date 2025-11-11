@@ -108,6 +108,6 @@ class PlayerAnswersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :bad_request # Or :ok if you prefer 200 for empty success
     json_response = JSON.parse(response.body)
-    assert_equal  json_response["error"], "param is missing or the value is empty: player_answers"
+    assert_equal "param is missing or the value is empty or invalid: player_answers", json_response["error"]
   end
 end
