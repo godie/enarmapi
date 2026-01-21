@@ -56,4 +56,23 @@ class PlayersControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
     assert_not_empty(response_json)
   end
+
+  test "should login player" do
+    @player.update!(password: "password123")
+    post login_players_url, params: { email: @player.email, password: "password123" }, as: :json
+    assert_response :success
+    assert_includes response.parsed_body, "token"
+  end
+
+  test "should not login player with wrong password" do
+    @player.update!(password: "password123")
+    post login_players_url, params: { email: @player.email, password: "wrong" }, as: :json
+    assert_response :unauthorized
+  end
+
+  test "should login google player" do
+    post google_login_players_url, params: { google_id: "google123", email: "google@example.com", name: "Google User" }, as: :json
+    assert_response :created
+    assert_includes response.parsed_body, "token"
+  end
 end

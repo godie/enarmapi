@@ -118,6 +118,7 @@ GEM
       typhoeus (~> 1.4)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-arm64-darwin)
+    ffi (1.17.2-x86_64-darwin)
     ffi (1.17.2-x86_64-linux-gnu)
     gemini-ai (4.3.0)
       event_stream_parser (~> 1.0)
@@ -183,6 +184,8 @@ GEM
     nokogiri (1.18.8-aarch64-linux-gnu)
       racc (~> 1.4)
     nokogiri (1.18.8-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.8-x86_64-darwin)
       racc (~> 1.4)
     nokogiri (1.18.8-x86_64-linux-gnu)
       racc (~> 1.4)
@@ -320,6 +323,7 @@ GEM
 PLATFORMS
   aarch64-linux
   arm64-darwin-21
+  x86_64-darwin-22
   x86_64-linux
 
 DEPENDENCIES

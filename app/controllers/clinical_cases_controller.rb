@@ -1,7 +1,7 @@
 class ClinicalCasesController < ApplicationController
-  before_action :authenticate_admin!, except: [ :show ]
+  before_action :authenticate_admin!, except: [ :show, :create ]
   before_action :set_clinical_case, only: %i[ show update destroy ]
-  before_action :authenticate_admin_or_player!, only: [ :show ]
+  before_action :authenticate_admin_or_player!, only: [ :show, :create ]
 
   # before_action :authenticate_request
   def index
@@ -17,6 +17,10 @@ class ClinicalCasesController < ApplicationController
   def create
     clinical_case_params[:name] = "clinical_case_#{SecureRandom.hex(10)}" unless clinical_case_params[:name].present?
     @clinical_case = ClinicalCase.new(clinical_case_params)
+    
+    # Force status to pending if user is not an admin
+    @clinical_case.status = :pending unless @current_user.admin?
+    
     if @clinical_case.save
       render json: @clinical_case, status: :created, location: @clinical_case, include: { questions: { include: :answers } }
     else
@@ -48,6 +52,7 @@ class ClinicalCasesController < ApplicationController
       :name, # Changed from title to name
       :description,
       :category_id,
+      :status,
       questions_attributes: [
         :id,
         :_destroy,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_16_183808) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,7 +47,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "status", default: 0
     t.index ["category_id"], name: "index_clinical_cases_on_category_id"
+    t.index ["status"], name: "index_clinical_cases_on_status"
   end
 
   create_table "exam_questions", force: :cascade do |t|
@@ -74,67 +76,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
     t.index ["category_id"], name: "index_exams_on_category_id"
   end
 
-  create_table "player_achievements", force: :cascade do |t|
-    t.bigint "player_id", null: false
-    t.bigint "achievement_id", null: false
-    t.datetime "achieved_at"
-    t.jsonb "progress"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["achievement_id"], name: "index_player_achievements_on_achievement_id"
-    t.index ["player_id"], name: "index_player_achievements_on_player_id"
-  end
-
-  create_table "player_answers", force: :cascade do |t|
-    t.bigint "player_id", null: false
-    t.bigint "question_id", null: false
-    t.bigint "answer_id", null: false
-    t.boolean "is_correct"
-    t.integer "time_taken"
-    t.string "mode", default: "practice"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["answer_id"], name: "index_player_answers_on_answer_id"
-    t.index ["player_id", "question_id", "created_at"], name: "idx_on_player_id_question_id_created_at_0ff3be30cd"
-    t.index ["player_id"], name: "index_player_answers_on_player_id"
-    t.index ["question_id"], name: "index_player_answers_on_question_id"
-  end
-
-  create_table "player_exam_answers", force: :cascade do |t|
-    t.bigint "player_exam_id", null: false
-    t.bigint "exam_question_id", null: false
-    t.bigint "answer_id", null: false
-    t.boolean "is_correct"
-    t.integer "points_earned"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["answer_id"], name: "index_player_exam_answers_on_answer_id"
-    t.index ["exam_question_id"], name: "index_player_exam_answers_on_exam_question_id"
-    t.index ["player_exam_id", "exam_question_id"], name: "index_player_exam_question_unique", unique: true
-    t.index ["player_exam_id"], name: "index_player_exam_answers_on_player_exam_id"
-  end
-
-  create_table "player_exams", force: :cascade do |t|
-    t.bigint "player_id", null: false
-    t.bigint "exam_id", null: false
-    t.datetime "started_at"
-    t.datetime "completed_at"
-    t.integer "score"
-    t.string "status"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["exam_id"], name: "index_player_exams_on_exam_id"
-    t.index ["player_id"], name: "index_player_exams_on_player_id"
-  end
-
-  create_table "players", force: :cascade do |t|
-    t.string "email"
-    t.string "facebook_id"
-    t.string "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "questions", force: :cascade do |t|
     t.text "text"
     t.bigint "clinical_case_id"
@@ -145,13 +86,74 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
     t.index ["clinical_case_id"], name: "index_questions_on_clinical_case_id"
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "name"
-    t.string "email"
-    t.string "username"
-    t.string "password_digest"
+  create_table "user_achievements", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "achievement_id", null: false
+    t.datetime "achieved_at"
+    t.jsonb "progress"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["achievement_id"], name: "index_user_achievements_on_achievement_id"
+    t.index ["user_id"], name: "index_user_achievements_on_user_id"
+  end
+
+  create_table "user_answers", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "question_id", null: false
+    t.bigint "answer_id", null: false
+    t.boolean "is_correct"
+    t.integer "time_taken"
+    t.string "mode", default: "practice"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["answer_id"], name: "index_user_answers_on_answer_id"
+    t.index ["question_id"], name: "index_user_answers_on_question_id"
+    t.index ["user_id", "question_id", "created_at"], name: "index_user_answers_on_user_id_and_question_id_and_created_at"
+    t.index ["user_id"], name: "index_user_answers_on_user_id"
+  end
+
+  create_table "user_exam_answers", force: :cascade do |t|
+    t.bigint "user_exam_id", null: false
+    t.bigint "exam_question_id", null: false
+    t.bigint "answer_id", null: false
+    t.boolean "is_correct"
+    t.integer "points_earned"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["answer_id"], name: "index_user_exam_answers_on_answer_id"
+    t.index ["exam_question_id"], name: "index_user_exam_answers_on_exam_question_id"
+    t.index ["user_exam_id", "exam_question_id"], name: "index_player_exam_question_unique", unique: true
+    t.index ["user_exam_id"], name: "index_user_exam_answers_on_user_exam_id"
+  end
+
+  create_table "user_exams", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "exam_id", null: false
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.integer "score"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exam_id"], name: "index_user_exams_on_exam_id"
+    t.index ["user_id"], name: "index_user_exams_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email"
+    t.string "facebook_id"
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "password_digest"
+    t.string "google_id"
+    t.string "username"
+    t.integer "role", default: 0
+    t.jsonb "preferences", default: {}, null: false
+    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["facebook_id"], name: "index_users_on_facebook_id", unique: true
+    t.index ["google_id"], name: "index_users_on_google_id", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "answers", "questions"
@@ -159,16 +161,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_005122) do
   add_foreign_key "exam_questions", "exams"
   add_foreign_key "exam_questions", "questions"
   add_foreign_key "exams", "categories"
-  add_foreign_key "player_achievements", "achievements"
-  add_foreign_key "player_achievements", "players"
-  add_foreign_key "player_answers", "answers"
-  add_foreign_key "player_answers", "players"
-  add_foreign_key "player_answers", "questions"
-  add_foreign_key "player_exam_answers", "answers"
-  add_foreign_key "player_exam_answers", "exam_questions"
-  add_foreign_key "player_exam_answers", "player_exams"
-  add_foreign_key "player_exams", "exams"
-  add_foreign_key "player_exams", "players"
   add_foreign_key "questions", "categories"
   add_foreign_key "questions", "clinical_cases"
+  add_foreign_key "user_achievements", "achievements"
+  add_foreign_key "user_achievements", "users"
+  add_foreign_key "user_answers", "answers"
+  add_foreign_key "user_answers", "questions"
+  add_foreign_key "user_answers", "users"
+  add_foreign_key "user_exam_answers", "answers"
+  add_foreign_key "user_exam_answers", "exam_questions"
+  add_foreign_key "user_exam_answers", "user_exams"
+  add_foreign_key "user_exams", "exams"
+  add_foreign_key "user_exams", "users"
 end
