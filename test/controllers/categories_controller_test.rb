@@ -25,13 +25,13 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     # Assert that the JSON contains expected data for at least one category
     # Find the category_one in the JSON response
     category_one_json = json_response.find { |c| c["id"] == @category_one.id }
-    assert_not_nil category_one_json, "Category one should be in the response"
+    refute_nil category_one_json, "Category one should be in the response"
     assert_equal @category_one.name, category_one_json["name"]
     assert_equal @category_one.description, category_one_json["description"]
 
     # Also check a second category to ensure multiple are rendered
     category_two_json = json_response.find { |c| c["id"] == @category_two.id }
-    assert_not_nil category_two_json, "Category two should be in the response"
+    refute_nil category_two_json, "Category two should be in the response"
   end
 
   # --- CREATE action tests ---

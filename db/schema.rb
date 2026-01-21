@@ -12,7 +12,7 @@
 
 ActiveRecord::Schema[7.2].define(version: 2026_01_16_183808) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension "pg_catalog.plpgsql"
 
   create_table "achievements", force: :cascade do |t|
     t.string "name"
