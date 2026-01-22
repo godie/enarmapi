@@ -26,12 +26,12 @@ Rails.application.routes.draw do
   # Respuestas (unificadas)
   post "player_answers", to: "user_answers#create" # Mantenemos el nombre de la ruta para el frontend
   get "player_answers", to: "user_answers#index"
-  
+
   post "user_answers", to: "user_answers#create"
   get "user_answers", to: "user_answers#index"
 
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
-  
+
   get "up" => "rails/health#show", as: :rails_health_check
 end

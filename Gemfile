@@ -49,6 +49,8 @@ end
 
 group :test do
   gem "simplecov", require: false
+  # DatabaseCleaner: Actualmente no se usa (usamos transacciones en su lugar)
+  # Solo necesario si usas múltiples conexiones de DB o threads en tests
   gem "database_cleaner-active_record"
   gem "webmock"
   gem "mocha"

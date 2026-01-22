@@ -24,3 +24,28 @@ user_two:
   password_digest: <%= BCrypt::Password.create('password') %>
   created_at: <%= Time.zone.now %>
   updated_at: <%= Time.zone.now %>
+
+# Players (users with role: player)
+player_one:
+  name: Player Fixture One
+  email: playerfixtureone@example.com
+  facebook_id: fb_player_fixture_one_unique_id
+  role: 0
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+player_two:
+  name: Player Fixture Two
+  email: playerfixturetwo@example.com
+  facebook_id: fb_player_fixture_two_unique_id
+  role: 0
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>
+
+player_for_achievements:
+  name: Achiever Player
+  email: achiever@example.com
+  facebook_id: fb_achiever_player_id
+  role: 0
+  created_at: <%= Time.zone.now %>
+  updated_at: <%= Time.zone.now %>

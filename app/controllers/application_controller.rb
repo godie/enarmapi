@@ -19,7 +19,7 @@ class ApplicationController < ActionController::API
   def authenticate_admin!
     authenticate_user!
     return if performed?
-    
+
     unless @current_user.admin?
       render json: { error: "Acceso restringido a administradores" }, status: :forbidden
     end

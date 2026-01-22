@@ -46,7 +46,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     # Assert the response body contains the newly created category's data
     assert_equal "New Category", json_response["name"]
     assert_equal "A brand new category", json_response["description"]
-    assert_not_nil json_response["id"] # Ensure an ID was assigned
+    refute_nil json_response["id"] # Ensure an ID was assigned
 
     # Verify that the category was actually saved to the database
     created_category = Category.find(json_response["id"])

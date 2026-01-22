@@ -3,18 +3,18 @@ require "test_helper"
 module Achievements
   class UnlockServiceTest < ActiveSupport::TestCase
     # Load all fixtures for simplicity in service tests, or specify as needed
-    fixtures :players, :achievements, :categories, :player_achievements,
-             :exams, :player_exams, :questions, :answers, :clinical_cases # Add other relevant fixtures
+    fixtures :users, :achievements, :categories, :user_achievements, # Changed from players, player_achievements
+             :exams, :user_exams, :questions, :answers, :clinical_cases # Changed from player_exams
 
     def setup
-      # Using fixtures for player and achievements
-      @player = players(:player_for_achievements) # A dedicated player for these tests
+      # Using fixtures for user and achievements
+      @player = users(:player_for_achievements) # Changed from players(:player_for_achievements)
 
-      # Clean up any existing achievements, player_exams, and player_answers for this player
-      # to ensure a clean state for each test concerning this specific player.
-      PlayerAchievement.where(player: @player).destroy_all
-      PlayerExam.where(player: @player).destroy_all
-      PlayerAnswer.where(player: @player).destroy_all # Assuming PlayerAnswer has player_id
+      # Clean up any existing achievements, user_exams, and user_answers for this user
+      # to ensure a clean state for each test concerning this specific user.
+      UserAchievement.where(user: @player).destroy_all # Changed from PlayerAchievement, player
+      UserExam.where(user: @player).destroy_all # Changed from PlayerExam, player
+      UserAnswer.where(user: @player).destroy_all # Changed from PlayerAnswer, player
 
       # Achievements from fixtures
       @ach_exams_1 = achievements(:exams_completed_1) # Criteria: { type: "exams_completed", count: 1 }
@@ -30,43 +30,43 @@ module Achievements
          @ach_urgencias_expert.reload
       end
 
-      # Clean up any existing achievements for this player to ensure clean test state
-      PlayerAchievement.where(player: @player).destroy_all
+      # Clean up any existing achievements for this user to ensure clean test state
+      UserAchievement.where(user: @player).destroy_all # Changed from PlayerAchievement, player
     end
 
     test "unlocks 'Pionero del Saber' (1 exam completed) achievement" do
-      # Simulate player completing 1 exam
-      # This requires creating related data like Exam, PlayerExam
+      # Simulate user completing 1 exam
+      # This requires creating related data like Exam, UserExam
       exam = Exam.create!(name: "Test Exam 1", category: @urgencias_category) # Assuming Exam model needs a category
-      PlayerExam.create!(player: @player, exam: exam, score: 80, completed_at: Time.current) # Assuming PlayerExam needs score & completed_at
+      UserExam.create!(user: @player, exam: exam, score: 80, completed_at: Time.current) # Changed from PlayerExam, player
 
-      assert_difference "PlayerAchievement.count", 1 do
+      assert_difference "UserAchievement.count", 1 do # Changed from PlayerAchievement.count
         unlocked = Achievements::UnlockService.new(@player).call
         assert_includes unlocked, @ach_exams_1, "Should unlock 'Pionero del Saber'"
       end
 
-      assert @player.achievements.exists?(@ach_exams_1.id), "'Pionero del Saber' should be associated with the player"
+      assert @player.achievements.exists?(@ach_exams_1.id), "'Pionero del Saber' should be associated with the user"
     end
 
     test "unlocks 'Estudiante Dedicado' (5 exams completed) achievement" do
-      # Simulate player completing 5 exams
+      # Simulate user completing 5 exams
       exam_category = @urgencias_category || Category.first || Category.create!(name: "General Test Category")
       5.times do |i|
         exam = Exam.create!(name: "Test Exam #{i+1}", category: exam_category)
-        PlayerExam.create!(player: @player, exam: exam, score: 70 + i*5, completed_at: Time.current)
+        UserExam.create!(user: @player, exam: exam, score: 70 + i*5, completed_at: Time.current) # Changed from PlayerExam, player
       end
 
-      # It should unlock both 1 exam and 5 exams achievements if player had none
-      # Expecting 2 achievements if the player starts with 0 exams completed.
-      # If "Pionero del Saber" was already unlocked in a previous test/state for this player, adjust count.
+      # It should unlock both 1 exam and 5 exams achievements if user had none
+      # Expecting 2 achievements if the user starts with 0 exams completed.
+      # If "Pionero del Saber" was already unlocked in a previous test/state for this user, adjust count.
       # For isolated test, we expect 2 (1 exam, 5 exams)
 
-      # Ensure the player has no achievements before this specific test part
-      PlayerAchievement.where(player: @player).destroy_all
+      # Ensure the user has no achievements before this specific test part
+      UserAchievement.where(user: @player).destroy_all # Changed from PlayerAchievement, player
 
       expected_unlocks = [ @ach_exams_1, @ach_exams_5 ]
 
-      assert_difference "PlayerAchievement.count", expected_unlocks.size do
+      assert_difference "UserAchievement.count", expected_unlocks.size do # Changed from PlayerAchievement.count
         unlocked = Achievements::UnlockService.new(@player).call
         expected_unlocks.each do |ach|
           assert_includes unlocked, ach, "Should unlock '#{ach.name}'"
@@ -78,15 +78,15 @@ module Achievements
       end
     end
 
-    test "does not unlock achievement if player already has it" do
-      # Give player the achievement first
-      PlayerAchievement.create!(player: @player, achievement: @ach_exams_1)
+    test "does not unlock achievement if user already has it" do
+      # Give user the achievement first
+      UserAchievement.create!(user: @player, achievement: @ach_exams_1) # Changed from PlayerAchievement, player
 
       # Simulate completing 1 exam again
       exam = Exam.create!(name: "Test Exam Repeat", category: @urgencias_category)
-      PlayerExam.create!(player: @player, exam: exam, score: 80, completed_at: Time.current)
+      UserExam.create!(user: @player, exam: exam, score: 80, completed_at: Time.current) # Changed from PlayerExam, player
 
-      assert_no_difference "PlayerAchievement.count" do
+      assert_no_difference "UserAchievement.count" do # Changed from PlayerAchievement.count
         unlocked = Achievements::UnlockService.new(@player).call
         assert_empty unlocked, "Should not unlock any new achievements"
       end
@@ -102,27 +102,26 @@ module Achievements
       min_exams_needed = @ach_urgencias_expert.criteria["min_exams_in_category"].to_i # e.g. 2
       accuracy_threshold = @ach_urgencias_expert.criteria["accuracy_threshold"].to_f # e.g. 80
 
-      # Simulate player taking exams in 'Urgencias' with high accuracy
+      # Simulate user taking exams in 'Urgencias' with high accuracy
       # Create questions and answers for these exams
       questions_per_exam = 5
 
       min_exams_needed.times do |i|
         exam = Exam.create!(name: "Urgencias Exam #{i+1}", category: @urgencias_category)
-        PlayerExam.create!(player: @player, exam: exam, score: accuracy_threshold.to_i + 5, completed_at: Time.current) # High score
+        UserExam.create!(user: @player, exam: exam, score: accuracy_threshold.to_i + 5, completed_at: Time.current) # Changed from PlayerExam, player
 
         questions_per_exam.times do |j|
           question = Question.create!(
             clinical_case: ClinicalCase.create!(name: "Case U-#{i}-#{j}", category: @urgencias_category, description: "Desc U-#{i}-#{j}"),
             text: "Question U-#{i}-#{j}?"
           )
-          # Player answers 4 out of 5 correctly to get 80%
+          # User answers 4 out of 5 correctly to get 80%
           # Or all correctly for >80%
-          PlayerAnswer.create!(
-            player: @player,
+          UserAnswer.create!( # Changed from PlayerAnswer, player
+            user: @player,
             question: question,
             answer: Answer.create!(question: question, text: "Correct", is_correct: true), # Assuming Answer model
-            is_correct: true # Assuming PlayerAnswer stores this directly
-            # exam: exam # Removed: PlayerAnswer does not directly belong to Exam
+            is_correct: true # Assuming UserAnswer stores this directly
           )
         end
       end
@@ -130,7 +129,7 @@ module Achievements
       # Also check for "Pionero del Saber" and potentially others if counts match
       # For this test, we focus on "Maestro de Urgencias" specifically by ensuring other simpler ones are met
       # Or clear existing to only test this one. Let's clear for isolation.
-      PlayerAchievement.where(player: @player).destroy_all
+      UserAchievement.where(user: @player).destroy_all # Changed from PlayerAchievement, player
 
       # The service will also award "Pionero del Saber" and potentially "Estudiante Dedicado"
       # if min_exams_needed meets those counts.
@@ -146,7 +145,7 @@ module Achievements
       end
 
 
-      assert_difference "PlayerAchievement.count", expected_new_achievements_count do
+      assert_difference "UserAchievement.count", expected_new_achievements_count do # Changed from PlayerAchievement.count
         unlocked = Achievements::UnlockService.new(@player).call
         assert_includes unlocked, @ach_urgencias_expert, "Should unlock 'Maestro de Urgencias'"
         if expected_new_achievements_count > 1 && min_exams_needed >= @ach_exams_1.criteria["count"].to_i
@@ -162,18 +161,17 @@ module Achievements
 
       min_exams_needed.times do |i|
         exam = Exam.create!(name: "Low Score Urgencias Exam #{i+1}", category: @urgencias_category)
-        PlayerExam.create!(player: @player, exam: exam, score: 50, completed_at: Time.current) # Low score
+        UserExam.create!(user: @player, exam: exam, score: 50, completed_at: Time.current) # Changed from PlayerExam, player
 
         question = Question.create!(
           clinical_case: ClinicalCase.create!(name: "Case U-Low-#{i}", category: @urgencias_category, description: "Desc U-Low-#{i}"),
           text: "Question U-Low-#{i}?"
         )
-        PlayerAnswer.create!(
-          player: @player,
+        UserAnswer.create!( # Changed from PlayerAnswer, player
+          user: @player,
           question: question,
           answer: Answer.create!(question: question, text: "Incorrect", is_correct: false),
           is_correct: false
-          # exam: exam # Removed: PlayerAnswer does not directly belong to Exam
         )
       end
 
@@ -188,13 +186,13 @@ module Achievements
       # Only 1 exam in category, but min_exams_in_category is likely 2 or more
       if @ach_urgencias_expert.criteria["min_exams_in_category"].to_i > 1
         exam = Exam.create!(name: "Single High Score Urgencias Exam", category: @urgencias_category)
-        PlayerExam.create!(player: @player, exam: exam, score: 90, completed_at: Time.current)
+        UserExam.create!(user: @player, exam: exam, score: 90, completed_at: Time.current) # Changed from PlayerExam, player
 
         question = Question.create!(
           clinical_case: ClinicalCase.create!(name: "Case U-Single-High", category: @urgencias_category, description: "Desc U-Single-High"),
           text: "Question U-Single-High?"
         )
-        PlayerAnswer.create!(player: @player, question: question, answer: Answer.create!(question: question, text: "Correct", is_correct: true), is_correct: true) # Removed exam: exam
+        UserAnswer.create!(user: @player, question: question, answer: Answer.create!(question: question, text: "Correct", is_correct: true), is_correct: true) # Changed from PlayerAnswer, player
 
         unlocked = Achievements::UnlockService.new(@player).call
         assert_not_includes unlocked, @ach_urgencias_expert, "Should NOT unlock 'Maestro de Urgencias' with insufficient exams in category"

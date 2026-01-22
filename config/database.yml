@@ -9,8 +9,8 @@ default: &default
   encode: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
-  username: <%= ENV['DATABASE_USER'] || "blogpg" %>
-  password: <%= ENV['DATABASE_PASSWORD'] || "blogpg" %>
+  username: <%= ENV['DATABASE_USER'] || "postgres" %>
+  password: <%= ENV['DATABASE_PASSWORD'] || "test" %>
   port: <%= ENV['DATABASE_PORT'] || "5432" %>
   host: <%= ENV['DATABASE_HOST'] || "127.0.0.1" %>
 

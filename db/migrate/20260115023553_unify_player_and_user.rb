@@ -10,7 +10,7 @@ class UnifyPlayerAndUser < ActiveRecord::Migration[7.2]
     add_column :users, :role, :integer, default: 0
 
     # 4. Renombrar las tablas relacionadas y sus columnas de referencia
-    
+
     # PlayerAchievements -> UserAchievements
     rename_table :player_achievements, :user_achievements
     rename_column :user_achievements, :player_id, :user_id

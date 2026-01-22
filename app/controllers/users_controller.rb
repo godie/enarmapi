@@ -21,7 +21,7 @@ class UsersController < ApplicationController
   # POST /users (Registro)
   def create
     @user = User.find_by(email: user_params[:email]) || User.new(user_params)
-    
+
     if @user.persisted?
       render json: user_json(@user), status: :ok
     elsif @user.save

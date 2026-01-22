@@ -28,7 +28,15 @@ module Users
     private
 
     def set_user
-      @user = User.find(params[:user_id])
+      # Support both user_id (from /users/:user_id/achievements) and player_id (from /players/:player_id/achievements)
+      user_id = params[:user_id] || params[:player_id]
+      # Try to find by ID first, then by facebook_id if it's not numeric
+      if user_id.to_s.match?(/^\d+$/)
+        @user = User.find(user_id)
+      else
+        @user = User.find_by(facebook_id: user_id)
+      end
+      raise ActiveRecord::RecordNotFound unless @user
     rescue ActiveRecord::RecordNotFound
       render json: { error: "Usuario no encontrado" }, status: :not_found
     end

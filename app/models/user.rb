@@ -19,7 +19,7 @@ class User < ApplicationRecord
   validates :username, uniqueness: { case_sensitive: false }, allow_nil: true
   validates :facebook_id, uniqueness: true, allow_nil: true
   validates :google_id, uniqueness: true, allow_nil: true
-  validates :password, length: { minimum: 6 }, if: -> { password.present? }
+  validates :password, length: { minimum: 6 }, confirmation: true, if: -> { password.present? }
 
   # Métodos de estadísticas
   def stats
