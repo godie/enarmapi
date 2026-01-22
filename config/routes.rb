@@ -1,29 +1,37 @@
 Rails.application.routes.draw do
-  resources :users
-  resources :players
-  post "auth_user", to: "auth#auth_user"
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
+  # Nuevas rutas unificadas
+  resources :users do
+    collection do
+      post "login"
+      post "google_login"
+    end
+    resources :achievements, only: [ :index ], controller: "users/achievements"
+  end
+
+  # Rutas de legacy para el frontend (apuntan a UsersController)
+  resources :players, controller: "users" do
+    collection do
+      post "login", to: "users#login"
+      post "google_login", to: "users#google_login"
+    end
+    resources :achievements, only: [ :index ], controller: "users/achievements"
+  end
 
   resources :categories
   resources :clinical_cases
-  # Questions are now a top-level resource
   resources :questions
-
-  post "player_answers", to: "player_answers#create"
-  get "player_answers", to: "player_answers#index"
-
   resources :exams
-
   resources :achievements, only: [ :index ]
-  resources :players do
-    resources :achievements, only: [ :index ], controller: "players/achievements"
-  end
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Respuestas (unificadas)
+  post "player_answers", to: "user_answers#create" # Mantenemos el nombre de la ruta para el frontend
+  get "player_answers", to: "user_answers#index"
+
+  post "user_answers", to: "user_answers#create"
+  get "user_answers", to: "user_answers#index"
+
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
+
+  get "up" => "rails/health#show", as: :rails_health_check
 end

@@ -1,14 +1,14 @@
 require "test_helper"
 
 class QuestionTest < ActiveSupport::TestCase
-  fixtures :categories, :clinical_cases, :players
+  fixtures :categories, :clinical_cases, :users
 
   setup do
     @category_one = categories(:one)
     @category_two = categories(:two)
     @clinical_case_one = clinical_cases(:one) # Belongs to category_one
     @clinical_case_two = clinical_cases(:two) # Belongs to category_two
-    @player_one = players(:player_one)
+    @player_one = users(:player_one)
   end
 
   # Associations
@@ -52,13 +52,13 @@ class QuestionTest < ActiveSupport::TestCase
   test "should be invalid without either a clinical_case or a category" do
     question = Question.new(text: "A question text without any association.")
     assert_not question.valid?, "Question should be invalid without clinical_case or category"
-    assert_includes question.errors[:base], "Question must be associated with a clinical case or a category"
+    assert_includes question.errors[:base], "La pregunta debe estar asociada a un caso clínico o a una categoría"
   end
 
   test "should be invalid if associated with both a clinical_case and a category directly" do
     question = Question.new(text: "A question text with both associations.", clinical_case: @clinical_case_one, category: @category_one)
     assert_not question.valid?, "Question should be invalid if associated with both clinical_case and category"
-    assert_includes question.errors[:base], "Question cannot be associated with both a clinical case and a category directly"
+    assert_includes question.errors[:base], "La pregunta no puede estar asociada a un caso clínico y a una categoría directamente"
   end
 
   test "should be valid with text and an associated clinical_case" do
@@ -131,10 +131,10 @@ class QuestionTest < ActiveSupport::TestCase
     @q_sa_a = Question.create!(text: "Standalone Q in Cat A", category: @cat_scope_a)
     @q_sa_b = Question.create!(text: "Standalone Q in Cat B", category: @cat_scope_b)
 
-    @player_scope = players(:player_one)
+    @player_scope = users(:player_one)
     # Make @q_cc_a1 practiced by @player_scope
     ans_for_practiced = Answer.create!(question: @q_cc_a1, text: "Ans for practiced", is_correct: true)
-    PlayerAnswer.create!(player: @player_scope, question: @q_cc_a1, answer: ans_for_practiced)
+    UserAnswer.create!(user: @player_scope, question: @q_cc_a1, answer: ans_for_practiced)
   end
 
   test "with_clinical_case scope returns only questions associated with a clinical case" do

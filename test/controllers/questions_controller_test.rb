@@ -164,7 +164,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_entity
     response_json = JSON.parse(response.body)
-    assert_includes response_json["base"], "Question must be associated with a clinical case or a category"
+    assert_includes response_json["base"], "La pregunta debe estar asociada a un caso clínico o a una categoría"
   end
 
   test "should not create question with BOTH clinical_case_id AND category_id" do
@@ -173,7 +173,7 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_response :unprocessable_entity
     response_json = JSON.parse(response.body)
-    assert_includes response_json["base"], "Question cannot be associated with both a clinical case and a category directly"
+    assert_includes response_json["base"], "La pregunta no puede estar asociada a un caso clínico y a una categoría directamente"
   end
 
 

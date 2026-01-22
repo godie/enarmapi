@@ -53,9 +53,9 @@ class AchievementTest < ActiveSupport::TestCase
   #   assert achievement.valid?
   # end
 
-  test "can have many players through player_achievements" do
+  test "can have many users through user_achievements" do
     achievement = Achievement.new(@achievement_params)
-    assert_respond_to achievement, :players
-    assert_respond_to achievement, :player_achievements
+    assert_respond_to achievement, :users
+    assert_respond_to achievement, :user_achievements
   end
 end
