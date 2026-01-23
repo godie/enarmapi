@@ -149,7 +149,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_16_183808) do
     t.string "google_id"
     t.string "username"
     t.integer "role", default: 0
-    t.json "preferences", null: false
+    t.json "preferences", null: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["facebook_id"], name: "index_users_on_facebook_id", unique: true
     t.index ["google_id"], name: "index_users_on_google_id", unique: true
