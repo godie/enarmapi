@@ -3,7 +3,7 @@ class CreateAchievements < ActiveRecord::Migration[7.2]
     create_table :achievements do |t|
       t.string :name
       t.text :description
-      t.jsonb :criteria
+      t.json :criteria
       t.string :icon_url
       t.integer :points
 
