@@ -4,7 +4,6 @@ source "https://rubygems.org"
 gem "rails", "~> 8.0.0"
 # Use sqlite3 as the database for Active Record
 # gem "sqlite3", ">= 1.4"
-gem "pg"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
@@ -36,6 +35,10 @@ gem "rack-cors"
 gem "will_paginate"
 gem "gemini-ai"
 
+group :production do
+  gem "mysql2", "~> 0.5"
+end
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri mswin mswin64 mingw x64_mingw ], require: "debug/prelude"
@@ -45,6 +48,8 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  gem "pg"
 end
 
 group :test do

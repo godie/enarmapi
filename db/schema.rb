@@ -17,7 +17,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_16_183808) do
   create_table "achievements", force: :cascade do |t|
     t.string "name"
     t.text "description"
-    t.jsonb "criteria"
+    t.json "criteria"
     t.string "icon_url"
     t.integer "points"
     t.datetime "created_at", null: false
@@ -90,7 +90,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_16_183808) do
     t.bigint "user_id", null: false
     t.bigint "achievement_id", null: false
     t.datetime "achieved_at"
-    t.jsonb "progress"
+    t.json "progress"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["achievement_id"], name: "index_user_achievements_on_achievement_id"
@@ -149,7 +149,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_16_183808) do
     t.string "google_id"
     t.string "username"
     t.integer "role", default: 0
-    t.jsonb "preferences", default: {}, null: false
+    t.json "preferences", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["facebook_id"], name: "index_users_on_facebook_id", unique: true
     t.index ["google_id"], name: "index_users_on_google_id", unique: true
