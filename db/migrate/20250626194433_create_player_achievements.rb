@@ -4,7 +4,7 @@ class CreatePlayerAchievements < ActiveRecord::Migration[7.2]
       t.references :player, null: false, foreign_key: true
       t.references :achievement, null: false, foreign_key: true
       t.datetime :achieved_at
-      t.jsonb :progress
+      t.json :progress
 
       t.timestamps
     end

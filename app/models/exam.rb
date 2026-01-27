@@ -1,15 +1,14 @@
 class Exam < ApplicationRecord
-  belongs_to :category # Added this line
+  belongs_to :category
 
   has_many :exam_questions, -> { order(:position) }, dependent: :destroy, inverse_of: :exam
   has_many :questions, through: :exam_questions
-  has_many :player_exams, dependent: :destroy # Assuming player_exams should also be destroyed
-  has_many :players, through: :player_exams
+  has_many :user_exams, dependent: :destroy
+  has_many :users, through: :user_exams
 
   accepts_nested_attributes_for :exam_questions, allow_destroy: true
 
   validates :name, presence: true
-  # validates :description, presence: true # Optional: Add if description should also be mandatory
 
   def total_points
     exam_questions.sum(:points)

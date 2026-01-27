@@ -1,32 +1,33 @@
 class ApplicationController < ActionController::API
   rescue_from ActionController::ParameterMissing do |exception|
-    render json: { error: exception.message }, status: :bad_request # HTTP 400
+    render json: { error: exception.message }, status: :bad_request
   end
 
-  def authenticate_request
-    @current_user = User.find_by(id: decoded_token[:user_id]) if decoded_token
+  def authenticate_user!
+    token = decoded_token
+    user_id = token[:user_id] || token[:player_id]
+    @current_user = User.find_by(id: user_id) if user_id
     render json: { error: "No autorizado" }, status: :unauthorized unless @current_user
   end
 
+  # Alias para compatibilidad con el frontend si es necesario
   def authenticate_player!
-    decoded_token
-    @current_player = Player.find_by(id: decoded_token[:player_id]) if decoded_token
-    render json: { error: "No autorizado" }, status: :unauthorized unless @current_player
+    authenticate_user!
+    @current_player = @current_user
   end
 
-  def authenticate_admin_or_player!
-    token = decoded_token
-    return render json: { error: "No autorizado" }, status: :unauthorized unless token
+  def authenticate_admin!
+    authenticate_user!
+    return if performed?
 
-    if token[:user_id]
-      @current_user = User.find_by(id: token[:user_id])
-      return if @current_user
-    elsif token[:player_id]
-      @current_player = Player.find_by(id: token[:player_id])
-      return if @current_player
+    unless @current_user.admin?
+      render json: { error: "Acceso restringido a administradores" }, status: :forbidden
     end
+  end
 
-    render json: { error: "No autorizado" }, status: :unauthorized
+  # Ahora este método es redundante pero lo mantenemos por compatibilidad
+  def authenticate_admin_or_player!
+    authenticate_user!
   end
 
   private
@@ -34,21 +35,8 @@ class ApplicationController < ActionController::API
   def decoded_token
     header = request.headers["Authorization"]
     header = header.split(" ").last if header
-    JsonWebToken.decode(header)
-  end
-
-  def authenticate_admin!
-    # First, ensure there's an authenticated user.
-    authenticate_request
-    nil if performed? # Stop if authenticate_request rendered an error (e.g., 401 due to no token)
-    # If we are in the test environment and a user is authenticated (by authenticate_request),
-    # for this basic stub, we'll assume they are an admin if the action requires admin.
-    # A real application would check an admin flag/role on the @current_user.
-    # Example: unless @current_user.admin?
-    # render json: { error: 'Not Authorized as Admin' }, status: :unauthorized
-    # end
-    # The crucial part for fixing current tests is that authenticate_request runs.
-    # If it's a test that *provides* admin headers, @current_user will be the admin,
-    # and this method effectively allows it. If no headers, authenticate_request handles the 401.
+    JsonWebToken.decode(header) || {}
+  rescue
+    {}
   end
 end

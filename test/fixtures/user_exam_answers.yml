@@ -1,6 +1,6 @@
-# test/fixtures/player_exam_answers.yml
+# test/fixtures/user_exam_answers.yml
 pea_player_one_exam_one_q_one_ans_one:
-  player_exam: player_one_exam_one # References player_one_exam_one from player_exams.yml
+  user_exam: pe_one_exam_urgencias # References pe_one_exam_urgencias from user_exams.yml
   exam_question: eq_one_q_one      # References eq_one_q_one from exam_questions.yml
   answer: one                      # References answer one from answers.yml
   points_earned: 10
@@ -8,7 +8,7 @@ pea_player_one_exam_one_q_one_ans_one:
   updated_at: <%= Time.zone.now %>
 
 pea_player_one_exam_one_q_two_ans_three:
-  player_exam: player_one_exam_one # References player_one_exam_one from player_exams.yml
+  user_exam: pe_one_exam_urgencias # References pe_one_exam_urgencias from user_exams.yml
   exam_question: eq_one_q_two      # References eq_one_q_two from exam_questions.yml
   answer: three                    # References answer three from answers.yml
   points_earned: 0 # Assuming this was an incorrect answer for this question by player one
@@ -16,7 +16,7 @@ pea_player_one_exam_one_q_two_ans_three:
   updated_at: <%= Time.zone.now %>
 
 pea_player_one_exam_two_q_three_ans_five:
-  player_exam: player_one_exam_two # References player_one_exam_two from player_exams.yml
+  user_exam: pe_two_exam_cardio # References pe_two_exam_cardio from user_exams.yml
   exam_question: eq_two_q_three    # References eq_two_q_three from exam_questions.yml
   answer: five                     # References answer five from answers.yml
   points_earned: 20

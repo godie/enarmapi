@@ -1,7 +1,7 @@
 require "test_helper"
 
 class AnswerTest < ActiveSupport::TestCase
-  fixtures :categories, :clinical_cases, :questions, :answers, :players
+  fixtures :categories, :clinical_cases, :questions, :answers, :users
   # Test associations
   test "should belong to question" do
     answer = Answer.new
@@ -11,7 +11,7 @@ class AnswerTest < ActiveSupport::TestCase
 
   test "should have many player_answers" do
     answer = Answer.new
-    assert_respond_to answer, :player_answers
+    assert_respond_to answer, :user_answers
   end
 
   # Test attributes existence (basic check)
@@ -33,8 +33,8 @@ class AnswerTest < ActiveSupport::TestCase
     @clinical_case_one = clinical_cases(:one) # Assumes this belongs to @category_one
     @question_one = questions(:one) # Assumes this belongs to @clinical_case_one
     @answer_one = answers(:one) # Assumes this is for @question_one
-    @player_one = players(:player_one)
-    @player_two = players(:player_two)
+    @player_one = users(:player_one)
+    @player_two = users(:player_two)
 
     # Ensure fixture consistency if needed, e.g., @answer_one belongs to @question_one
     if @answer_one.question != @question_one
@@ -86,16 +86,16 @@ class AnswerTest < ActiveSupport::TestCase
   test "can have multiple player_answers from different players for the same question" do
     # Use @answer_one which is associated with @question_one
     # Player one answers with @answer_one
-    PlayerAnswer.create!(player: @player_one, question: @question_one, answer: @answer_one)
+    UserAnswer.create!(user: @player_one, question: @question_one, answer: @answer_one)
 
     # Player two answers the same question (@question_one) also choosing @answer_one
-    PlayerAnswer.create!(player: @player_two, question: @question_one, answer: @answer_one)
+    UserAnswer.create!(user: @player_two, question: @question_one, answer: @answer_one)
 
     # Reload @answer_one to get its player_answers association updated from DB
     @answer_one.reload
-    assert_equal 2, @answer_one.player_answers.count, "Answer should have 2 player_answers"
+    assert_equal 2, @answer_one.user_answers.count, "Answer should have 2 player_answers"
     # More specific check if PlayerAnswer stores question_id (which it does)
-    assert_equal 2, @answer_one.player_answers.where(question_id: @question_one.id).count
+    assert_equal 2, @answer_one.user_answers.where(question_id: @question_one.id).count
   end
 
   test "should not be valid without being associated with a question" do

@@ -15,10 +15,10 @@ class ExamQuestionTest < ActiveSupport::TestCase
     assert_respond_to eq, :question_id
   end
 
-  test "should have many player_exam_answers" do
+  test "should have many user_exam_answers" do
     eq = ExamQuestion.new
-    assert_respond_to eq, :player_exam_answers
-    # Dependent destroy for player_exam_answers is not specified in model,
+    assert_respond_to eq, :user_exam_answers
+    # Dependent destroy for user_exam_answers is not specified in model,
     # so not tested here unless it becomes a requirement.
   end
 
@@ -64,7 +64,7 @@ class ExamQuestionTest < ActiveSupport::TestCase
     assert_not duplicate_exam_question.valid?, "Should not be valid due to (exam_id, question_id) uniqueness constraint"
     # Default message for uniqueness is "has already been taken".
     # It applies to the attribute being validated for uniqueness within the scope.
-    assert_includes duplicate_exam_question.errors[:question_id], "has already been added to this exam"
+    assert_includes duplicate_exam_question.errors[:question_id], "ya ha sido añadida a este examen"
   end
 
   # General attributes and validity
@@ -122,26 +122,26 @@ class ExamQuestionTest < ActiveSupport::TestCase
   # If it were active, tests for list behavior (auto-positioning, reordering on destroy/move) would go here.
   # Since `position` is just a regular integer field currently, no specific list tests are needed beyond basic assignment.
 
-  test "can have associated player_exam_answers" do
+  test "can have associated user_exam_answers" do
     # This test is primarily for the association's existence.
-    # More detailed interaction tests would involve PlayerExamAnswer creation.
+    # More detailed interaction tests would involve UserExamAnswer creation.
     exam_q_from_fixture = exam_questions(:eq_one_q_one) # from exam_questions.yml
 
-    assert_nothing_raised { exam_q_from_fixture.player_exam_answers.build } # Check if `build` works
+    assert_nothing_raised { exam_q_from_fixture.user_exam_answers.build } # Check if `build` works
 
-    # If fixtures for PlayerExamAnswer exist and are linked to exam_questions(:eq_exam1_q1),
-    # then `exam_q_from_fixture.player_exam_answers.count` would be > 0.
-    # Example: player_exam_answers(:pea_for_eq1_q1) if defined.
+    # If fixtures for UserExamAnswer exist and are linked to exam_questions(:eq_exam1_q1),
+    # then `exam_q_from_fixture.user_exam_answers.count` would be > 0.
+    # Example: user_exam_answers(:pea_for_eq1_q1) if defined.
     # For now, just ensuring the association method itself doesn't error.
     # A more robust test would be:
-    # player_exam = player_exams(:one) # Assuming this PE is for the same exam as eq_exam1_q1
+    # user_exam = user_exams(:one) # Assuming this UE is for the same exam as eq_exam1_q1
     # answer = answers(:one) # Assuming this answer is for eq_exam1_q1.question
-    # pea = PlayerExamAnswer.create!(player_exam: player_exam, exam_question: exam_q_from_fixture, answer: answer)
-    # assert_includes exam_q_from_fixture.reload.player_exam_answers, pea
-    # pea.destroy # Clean up
+    # uea = UserExamAnswer.create!(user_exam: user_exam, exam_question: exam_q_from_fixture, answer: answer)
+    # assert_includes exam_q_from_fixture.reload.user_exam_answers, uea
+    # uea.destroy # Clean up
 
     # Current simple check:
-    assert_equal 0, exam_q_from_fixture.player_exam_answers.count, "Expected 0 player_exam_answers if none are fixture-linked or created."
+    assert_equal 0, exam_q_from_fixture.user_exam_answers.count, "Expected 0 user_exam_answers if none are fixture-linked or created."
     # This might be brittle if fixtures *do* link some. A specific setup for this test might be better.
   end
 end

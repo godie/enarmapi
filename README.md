@@ -16,8 +16,8 @@ To run this project, you will need the following software installed:
 ### 3.1. Clone the Repository
 
 ```bash
-git clone <your_repository_url> # Replace <your_repository_url> with the actual URL
-cd enarm-api # Or your repository's directory name
+git clone https://github.com/godie/enarmapi.git enarmapi
+cd enarmapi
 ```
 
 ### 3.2. Configuration

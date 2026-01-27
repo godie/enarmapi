@@ -1,7 +1,7 @@
 require "test_helper"
 
 class ExamTest < ActiveSupport::TestCase
-  fixtures :exams, :categories, :questions, :players
+  fixtures :exams, :categories, :questions, :users
   # Associations
   test "should have many exam_questions, ordered by position, and dependent destroy" do
     exam = Exam.new
@@ -31,20 +31,20 @@ class ExamTest < ActiveSupport::TestCase
     assert_respond_to exam, :questions
   end
 
-  test "should have many player_exams and dependent destroy" do
+  test "should have many user_exams and dependent destroy" do
     exam = Exam.new
-    assert_respond_to exam, :player_exams
+    assert_respond_to exam, :user_exams
 
     # Test dependent destroy
-    exam_with_pes = Exam.create!(name: "Exam for PE Destroy Test", category: categories(:one))
-    player = players(:player_one)
-    pe = PlayerExam.create!(exam: exam_with_pes, player: player, status: "started")
-    pe_id = pe.id
+    exam_with_ues = Exam.create!(name: "Exam for UE Destroy Test", category: categories(:one))
+    user = users(:player_one)
+    ue = UserExam.create!(exam: exam_with_ues, user: user, status: "started")
+    ue_id = ue.id
 
-    assert_difference "PlayerExam.count", -1 do
-      exam_with_pes.destroy
+    assert_difference "UserExam.count", -1 do
+      exam_with_ues.destroy
     end
-    assert_not PlayerExam.exists?(pe_id)
+    assert_not UserExam.exists?(ue_id)
   end
 
   test "should accept nested attributes for exam_questions and allow destroy" do
@@ -72,7 +72,7 @@ class ExamTest < ActiveSupport::TestCase
     @exam_one_fixture = exams(:exam_one_urgencias) # Fixture: "Cardiology Basics"
     @question1_fixture = questions(:one)
     @question2_fixture = questions(:two)
-    @player_one_fixture = players(:player_one)
+    @player_one_fixture = users(:player_one)
   end
 
   test "should be valid with just a name" do

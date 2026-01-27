@@ -182,6 +182,19 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     put clinical_case_url(@existing_clinical_case), params: { clinical_case: { name: "" } }, headers: @auth_headers, as: :json # Changed from title
     assert_response :unprocessable_entity
     @existing_clinical_case.reload
+    @existing_clinical_case.reload
     assert_equal original_name, @existing_clinical_case.name # Changed from title
+  end
+
+  test "should allow player to create clinical_case and force pending status" do
+    player_user = users(:user_one) # Assuming this is a player role (0)
+    player_auth_headers = admin_auth_headers(player_user) # reusing helper for player token
+
+    assert_difference("ClinicalCase.count", 1) do
+      post clinical_cases_url, params: { clinical_case: @valid_clinical_case_attrs.merge(status: "published") }, headers: player_auth_headers, as: :json
+    end
+    assert_response :created
+    response_json = JSON.parse(response.body)
+    assert_equal "pending", response_json["status"], "Player contribution should be forced to pending"
   end
 end
