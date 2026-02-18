@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :authenticate_admin!, only: %i[index destroy]
-  before_action :authenticate_user!, only: %i[show update stats]
+  before_action :authenticate_user!, only: %i[show update stats contributions]
   before_action :set_user, only: %i[show update destroy]
 
   # GET /users
@@ -64,6 +64,12 @@ class UsersController < ApplicationController
   # GET /users/me/stats
   def stats
     render json: @current_user.stats.merge(total_points: @current_user.total_points)
+  end
+
+  # GET /users/me/contributions - clinical cases contributed by the current user
+  def contributions
+    cases = @current_user.clinical_cases.order(created_at: :desc)
+    render json: { contributions: cases }
   end
 
   # POST /google_login

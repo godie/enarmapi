@@ -13,6 +13,7 @@ class User < ApplicationRecord
 
   has_many :user_achievements, dependent: :destroy
   has_many :achievements, through: :user_achievements
+  has_many :clinical_cases, dependent: :nullify, foreign_key: :user_id
 
   # Validaciones
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: VALID_EMAIL_REGEX }

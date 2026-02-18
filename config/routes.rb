@@ -5,6 +5,7 @@ Rails.application.routes.draw do
       post "login"
       post "google_login"
       get "me/stats", to: "users#stats"
+      get "me/contributions", to: "users#contributions"
     end
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
@@ -19,7 +20,7 @@ Rails.application.routes.draw do
   end
 
   resources :categories do
-    resources :clinical_cases, only: [:index]
+    resources :clinical_cases, only: [ :index ]
   end
   resources :clinical_cases
   resources :questions
