@@ -7,6 +7,9 @@ class ClinicalCasesController < ApplicationController
   def index
     page = params[:page]
     @cases = ClinicalCase.paginate(page: page).order(id: :desc)
+    if params[:category_id]
+      @cases = @cases.where(category_id: params[:category_id])
+    end
     render json: { current_page: @cases.current_page, per_page: @cases.per_page, total_entries: @cases.total_entries, clinical_cases: @cases }
   end
 

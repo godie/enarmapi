@@ -18,7 +18,9 @@ Rails.application.routes.draw do
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
 
-  resources :categories
+  resources :categories do
+    resources :clinical_cases, only: [:index]
+  end
   resources :clinical_cases
   resources :questions
   resources :exams
