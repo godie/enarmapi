@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :authenticate_admin!, only: %i[index destroy]
-  before_action :authenticate_user!, only: %i[show update]
+  before_action :authenticate_user!, only: %i[show update stats]
   before_action :set_user, only: %i[show update destroy]
 
   # GET /users
@@ -59,6 +59,11 @@ class UsersController < ApplicationController
     else
       render json: { error: "Credenciales inválidas" }, status: :unauthorized
     end
+  end
+
+  # GET /users/me/stats
+  def stats
+    render json: @current_user.stats.merge(total_points: @current_user.total_points)
   end
 
   # POST /google_login

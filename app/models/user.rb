@@ -38,6 +38,10 @@ class User < ApplicationRecord
     ((user_answers.correct.count.to_f / user_answers.count) * 100).round(2)
   end
 
+  def total_points
+    achievements.sum(:points) || 0
+  end
+
   def answered?(question)
     user_answers.exists?(question: question)
   end
