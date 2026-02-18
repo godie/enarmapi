@@ -4,6 +4,8 @@ Rails.application.routes.draw do
     collection do
       post "login"
       post "google_login"
+      get "me/stats", to: "users#stats"
+      get "me/contributions", to: "users#contributions"
     end
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
@@ -17,10 +19,13 @@ Rails.application.routes.draw do
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
 
-  resources :categories
+  resources :categories do
+    resources :clinical_cases, only: [ :index ]
+  end
   resources :clinical_cases
   resources :questions
   resources :exams
+  resources :user_exams, only: [ :index, :show, :create, :update ]
   resources :achievements, only: [ :index ]
 
   # Respuestas (unificadas)
@@ -32,6 +37,8 @@ Rails.application.routes.draw do
 
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
+
+  get "leaderboard", to: "leaderboard#index"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

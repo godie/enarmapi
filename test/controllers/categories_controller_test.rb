@@ -27,7 +27,11 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     category_one_json = json_response.find { |c| c["id"] == @category_one.id }
     refute_nil category_one_json, "Category one should be in the response"
     assert_equal @category_one.name, category_one_json["name"]
-    assert_equal @category_one.description, category_one_json["description"]
+    if @category_one.description.nil?
+      assert_nil category_one_json["description"]
+    else
+      assert_equal @category_one.description, category_one_json["description"]
+    end
 
     # Also check a second category to ensure multiple are rendered
     category_two_json = json_response.find { |c| c["id"] == @category_two.id }
@@ -85,7 +89,11 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(response.body)
     assert_equal @category_one.id, json_response["id"]
     assert_equal @category_one.name, json_response["name"]
-    assert_equal @category_one.description, json_response["description"]
+    if @category_one.description.nil?
+      assert_nil json_response["description"]
+    else
+      assert_equal @category_one.description, json_response["description"]
+    end
   end
 
   test "should not show non-existent category" do
