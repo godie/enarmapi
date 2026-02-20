@@ -11,12 +11,9 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_catalog.plpgsql"
-
   create_table "achievements", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.jsonb "criteria"
+    t.json "criteria"
     t.text "description"
     t.string "icon_url"
     t.string "name"
@@ -92,7 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.datetime "achieved_at"
     t.bigint "achievement_id", null: false
     t.datetime "created_at", null: false
-    t.jsonb "progress"
+    t.json "progress"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["achievement_id"], name: "index_user_achievements_on_achievement_id"
@@ -148,7 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.string "google_id"
     t.string "name"
     t.string "password_digest"
-    t.jsonb "preferences", default: {}, null: false
+    t.json "preferences", null: true
     t.integer "role", default: 0
     t.datetime "updated_at", null: false
     t.string "username"
