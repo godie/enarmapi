@@ -32,6 +32,7 @@ Rails.application.routes.draw do
 
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
+  post "ai/bulk_create_exam", to: "ai#bulk_create_exam"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end
