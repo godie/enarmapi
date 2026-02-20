@@ -4,6 +4,8 @@ Rails.application.routes.draw do
     collection do
       post "login"
       post "google_login"
+      get "me/stats", to: "users#stats"
+      get "me/contributions", to: "users#contributions"
     end
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
@@ -17,11 +19,14 @@ Rails.application.routes.draw do
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
 
-  resources :categories
+  resources :categories do
+    resources :clinical_cases, only: [ :index ]
+  end
   resources :clinical_cases
   resources :questions
   resources :exams
-  resources :achievements, only: [ :index ]
+  resources :user_exams, only: [ :index, :show, :create, :update ]
+  resources :achievements, only: [ :index, :create, :update, :destroy ]
 
   # Respuestas (unificadas)
   post "player_answers", to: "user_answers#create" # Mantenemos el nombre de la ruta para el frontend
@@ -33,6 +38,8 @@ Rails.application.routes.draw do
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
   post "ai/bulk_create_exam", to: "ai#bulk_create_exam"
+
+  get "leaderboard", to: "leaderboard#index"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end

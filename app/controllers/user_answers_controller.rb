@@ -21,12 +21,30 @@ class UserAnswersController < ApplicationController
       player_for_service = @current_user
       unlocked_achievements = Achievements::UnlockService.new(player_for_service).call
 
+      # Optimización para evitar N+1
+      @user_answers_records = UserAnswer.where(id: @user_answers_records.map(&:id)).includes(question: :answers, answer: {})
+
+      results = @user_answers_records.map do |ua|
+        correct_answer = ua.question.answers.find(&:is_correct)
+        {
+          question_id: ua.question_id,
+          answer_id: ua.answer_id,
+          is_correct: ua.is_correct,
+          explanation: ua.answer.description,
+          correct_answer: {
+            id: correct_answer&.id,
+            text: correct_answer&.text,
+            explanation: correct_answer&.description
+          }
+        }
+      end
+
       response_message = "Respuestas guardadas correctamente!"
       response_message += " ¡Has desbloqueado #{unlocked_achievements.count} nuevos logros!" if unlocked_achievements.any?
 
       render json: {
         message: response_message,
-        user_answer_ids: @user_answers_records.map(&:id),
+        results: results,
         unlocked_achievements: unlocked_achievements.map { |ach| { id: ach.id, name: ach.name } }
       }, status: :created
     else

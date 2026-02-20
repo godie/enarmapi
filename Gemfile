@@ -35,21 +35,21 @@ gem "rack-cors"
 gem "will_paginate"
 gem "gemini-ai"
 
-group :production do
-  gem "mysql2", "~> 0.5"
-end
+# MySQL para development, test y production. Ver docs/POSTGRESQL_MIGRATION.md para volver a PostgreSQL.
+gem "mysql2", "~> 0.5"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri mswin mswin64 mingw x64_mingw ], require: "debug/prelude"
 
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
-  gem "brakeman", require: false
+  gem "brakeman", "~> 8.0", require: false
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
 
-  gem "pg"
+  # Solo necesario si se vuelve a PostgreSQL (ver docs/POSTGRESQL_MIGRATION.md)
+  # gem "pg"
 end
 
 group :test do

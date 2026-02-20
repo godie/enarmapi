@@ -13,6 +13,7 @@ class User < ApplicationRecord
 
   has_many :user_achievements, dependent: :destroy
   has_many :achievements, through: :user_achievements
+  has_many :clinical_cases, dependent: :nullify, foreign_key: :user_id
 
   # Validaciones
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: VALID_EMAIL_REGEX }
@@ -36,6 +37,10 @@ class User < ApplicationRecord
   def calculate_accuracy
     return 0 if user_answers.count.zero?
     ((user_answers.correct.count.to_f / user_answers.count) * 100).round(2)
+  end
+
+  def total_points
+    achievements.sum(:points) || 0
   end
 
   def answered?(question)

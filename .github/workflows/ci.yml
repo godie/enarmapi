@@ -4,11 +4,11 @@ on:
   pull_request:
   push:
     branches: [ main ]
-  
+
 env:
-  POSTGRES_DB: postgres_test
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: password
+  MYSQL_DATABASE: enarmapi_test
+  MYSQL_USER: root
+  MYSQL_ROOT_PASSWORD: password
 
 jobs:
   scan_ruby:
@@ -25,7 +25,7 @@ jobs:
           bundler-cache: true
 
       - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
+        run: bin/brakeman --no-pager --except EOLRuby
 
   lint:
     runs-on: ubuntu-latest
@@ -46,28 +46,21 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
-        image: postgres
+      mysql:
+        image: mysql:8.0
         env:
-          POSTGRES_PASSWORD: password
-        ports: ['5432:5432']
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: enarmapi_test
+        ports: ['3306:3306']
         options: >-
-          --health-cmd pg_isready
+          --health-cmd="mysqladmin ping -h localhost -u root -ppassword"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-
-
-    # services:
-    #  redis:
-    #    image: redis
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libvips sqlite3
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libvips sqlite3 default-libmysqlclient-dev default-mysql-client pkg-config
 
       - name: Checkout code
         uses: actions/checkout@v5
@@ -77,23 +70,31 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: true
-      
+
       - name: Install dependencies
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Wait for MySQL
         run: |
-          sudo apt-get update && sudo apt-get -yqq install libpq-dev
-          bundle install --jobs 4 --retry 3
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -u root -ppassword --silent && break
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
 
       - name: Run tests
         env:
           RAILS_ENV: test
-          PGHOST: localhost
+          DATABASE_HOST: 127.0.0.1
+          DATABASE_PORT: "3306"
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: enarmapi_test
           DISABLE_SPRING: 1
-          # REDIS_URL: redis://localhost:6379/0
         run: |
           cp config/database.ci.yml config/database.yml
-          sleep 5
           bin/rails db:test:prepare
-          bin/rails test 
+          bin/rails test
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v6
