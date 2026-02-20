@@ -37,6 +37,7 @@ Rails.application.routes.draw do
 
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
+  post "ai/bulk_create_exam", to: "ai#bulk_create_exam"
 
   get "leaderboard", to: "leaderboard#index"
 
