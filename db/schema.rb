@@ -11,7 +11,7 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
-  create_table "achievements", force: :cascade do |t|
+  create_table "achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "criteria"
     t.text "description"
@@ -21,7 +21,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "answers", force: :cascade do |t|
+  create_table "answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
     t.boolean "is_correct"
@@ -31,14 +31,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["question_id"], name: "index_answers_on_question_id"
   end
 
-  create_table "categories", force: :cascade do |t|
+  create_table "categories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
     t.string "name"
     t.datetime "updated_at", null: false
   end
 
-  create_table "clinical_cases", force: :cascade do |t|
+  create_table "clinical_cases", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "category_id", null: false
     t.datetime "created_at", null: false
     t.text "description"
@@ -51,7 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["user_id"], name: "index_clinical_cases_on_user_id"
   end
 
-  create_table "exam_questions", force: :cascade do |t|
+  create_table "exam_questions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "exam_id", null: false
     t.integer "points"
@@ -63,7 +63,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["question_id"], name: "index_exam_questions_on_question_id"
   end
 
-  create_table "exams", force: :cascade do |t|
+  create_table "exams", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.boolean "active", default: true
     t.bigint "category_id", null: false
     t.datetime "created_at", null: false
@@ -75,7 +75,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["category_id"], name: "index_exams_on_category_id"
   end
 
-  create_table "questions", force: :cascade do |t|
+  create_table "questions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "category_id"
     t.bigint "clinical_case_id"
     t.datetime "created_at", null: false
@@ -85,7 +85,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["clinical_case_id"], name: "index_questions_on_clinical_case_id"
   end
 
-  create_table "user_achievements", force: :cascade do |t|
+  create_table "user_achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "achieved_at"
     t.bigint "achievement_id", null: false
     t.datetime "created_at", null: false
@@ -96,7 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["user_id"], name: "index_user_achievements_on_user_id"
   end
 
-  create_table "user_answers", force: :cascade do |t|
+  create_table "user_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "answer_id", null: false
     t.datetime "created_at", null: false
     t.boolean "is_correct"
@@ -111,7 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["user_id"], name: "index_user_answers_on_user_id"
   end
 
-  create_table "user_exam_answers", force: :cascade do |t|
+  create_table "user_exam_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "answer_id", null: false
     t.datetime "created_at", null: false
     t.bigint "exam_question_id", null: false
@@ -125,7 +125,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["user_exam_id"], name: "index_user_exam_answers_on_user_exam_id"
   end
 
-  create_table "user_exams", force: :cascade do |t|
+  create_table "user_exams", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.bigint "exam_id", null: false
@@ -138,14 +138,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_160100) do
     t.index ["user_id"], name: "index_user_exams_on_user_id"
   end
 
-  create_table "users", force: :cascade do |t|
+  create_table "users", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email"
     t.string "facebook_id"
     t.string "google_id"
     t.string "name"
     t.string "password_digest"
-    t.json "preferences", null: true
+    t.json "preferences"
     t.integer "role", default: 0
     t.datetime "updated_at", null: false
     t.string "username"
