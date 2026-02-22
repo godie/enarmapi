@@ -11,8 +11,8 @@ SimpleCov.start "rails" do
   # Falla si la cobertura es menor a 80%
   minimum_coverage 80
 
-  # Falla si la cobertura baja respecto a la última ejecución (coverage/ está en .gitignore, así que la referencia varía por máquina)
-  # refuse_coverage_drop
+  # Falla si la cobertura baja
+  refuse_coverage_drop
 
   # Ignorar archivos de configuración y migraciones
   add_filter "/config/"

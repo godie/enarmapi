@@ -7,9 +7,6 @@ class ClinicalCasesController < ApplicationController
   def index
     page = params[:page]
     @cases = ClinicalCase.paginate(page: page).order(id: :desc)
-    if params[:category_id]
-      @cases = @cases.where(category_id: params[:category_id])
-    end
     render json: { current_page: @cases.current_page, per_page: @cases.per_page, total_entries: @cases.total_entries, clinical_cases: @cases }
   end
 
@@ -20,7 +17,6 @@ class ClinicalCasesController < ApplicationController
   def create
     clinical_case_params[:name] = "clinical_case_#{SecureRandom.hex(10)}" unless clinical_case_params[:name].present?
     @clinical_case = ClinicalCase.new(clinical_case_params)
-    @clinical_case.user_id = @current_user.id if @current_user.present?
 
     # Force status to pending if user is not an admin
     @clinical_case.status = :pending unless @current_user.admin?
