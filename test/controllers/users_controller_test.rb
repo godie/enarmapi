@@ -112,4 +112,17 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     user_to_update.reload
     assert_equal original_email, user_to_update.email # Ensure email was not changed
   end
+
+  test "GET me/contributions returns current user contributions when authenticated" do
+    get me_contributions_users_url, headers: @auth_headers, as: :json
+    assert_response :success
+    response_json = JSON.parse(response.body)
+    assert response_json.key?("contributions"), "Response must include contributions"
+    assert_kind_of Array, response_json["contributions"]
+  end
+
+  test "GET me/contributions returns unauthorized without token" do
+    get me_contributions_users_url, as: :json
+    assert_response :unauthorized
+  end
 end
