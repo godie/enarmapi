@@ -5,7 +5,7 @@ class UserFlashcard < ApplicationRecord
   validates :status, presence: true
   validates :user_id, uniqueness: { scope: :flashcard_id }
 
-  scope :due, -> { where('next_review <= ?', Time.current) }
+  scope :due, -> { where("next_review <= ?", Time.current) }
 
   # Simple SM-2 Algorithm adaptation
   def review(quality)
@@ -22,11 +22,11 @@ class UserFlashcard < ApplicationRecord
         self.interval = (interval * ease_factor).round
       end
       self.repetitions += 1
-      self.status = 'reviewing'
+      self.status = "reviewing"
     else
       self.repetitions = 0
       self.interval = 1
-      self.status = 'learning'
+      self.status = "learning"
     end
 
     self.ease_factor = ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))

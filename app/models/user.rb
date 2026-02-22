@@ -6,8 +6,8 @@ class User < ApplicationRecord
   enum :role, { player: 0, admin: 1, specialist: 2 }, default: :player
 
   has_one :specialist_profile, dependent: :destroy
-  has_many :sent_messages, class_name: 'Message', foreign_key: 'sender_id', dependent: :destroy
-  has_many :received_messages, class_name: 'Message', foreign_key: 'receiver_id', dependent: :destroy
+  has_many :sent_messages, class_name: "Message", foreign_key: "sender_id", dependent: :destroy
+  has_many :received_messages, class_name: "Message", foreign_key: "receiver_id", dependent: :destroy
 
   has_many :user_answers, dependent: :destroy
   has_many :practiced_questions, through: :user_answers, source: :question

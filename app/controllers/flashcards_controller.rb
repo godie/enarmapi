@@ -1,6 +1,6 @@
 class FlashcardsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_flashcard, only: [:show, :review]
+  before_action :set_flashcard, only: [ :show, :review ]
 
   # GET /flashcards
   def index
@@ -32,6 +32,6 @@ class FlashcardsController < ApplicationController
   def set_flashcard
     @flashcard = Flashcard.find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Flashcard not found' }, status: :not_found
+    render json: { error: "Flashcard not found" }, status: :not_found
   end
 end

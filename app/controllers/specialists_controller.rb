@@ -12,6 +12,6 @@ class SpecialistsController < ApplicationController
     @specialist = User.specialist.find(params[:id])
     render json: @specialist.as_json(include: :specialist_profile)
   rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Specialist not found' }, status: :not_found
+    render json: { error: "Specialist not found" }, status: :not_found
   end
 end

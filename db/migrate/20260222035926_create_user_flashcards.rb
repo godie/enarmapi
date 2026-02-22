@@ -11,6 +11,6 @@ class CreateUserFlashcards < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :user_flashcards, [:user_id, :flashcard_id], unique: true
+    add_index :user_flashcards, [ :user_id, :flashcard_id ], unique: true
   end
 end
