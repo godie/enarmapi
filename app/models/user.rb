@@ -3,7 +3,11 @@ class User < ApplicationRecord
 
   has_secure_password validations: false
 
-  enum :role, { player: 0, admin: 1 }, default: :player
+  enum :role, { player: 0, admin: 1, specialist: 2 }, default: :player
+
+  has_one :specialist_profile, dependent: :destroy
+  has_many :sent_messages, class_name: 'Message', foreign_key: 'sender_id', dependent: :destroy
+  has_many :received_messages, class_name: 'Message', foreign_key: 'receiver_id', dependent: :destroy
 
   has_many :user_answers, dependent: :destroy
   has_many :practiced_questions, through: :user_answers, source: :question
@@ -14,6 +18,9 @@ class User < ApplicationRecord
   has_many :user_achievements, dependent: :destroy
   has_many :achievements, through: :user_achievements
   has_many :clinical_cases, dependent: :nullify, foreign_key: :user_id
+
+  has_many :user_flashcards, dependent: :destroy
+  has_many :flashcards, through: :user_flashcards
 
   # Validaciones
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: VALID_EMAIL_REGEX }
