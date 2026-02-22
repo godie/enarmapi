@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
   create_table "achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "criteria"
@@ -103,6 +103,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
     t.index ["category_id"], name: "index_exams_on_category_id"
   end
 
+  create_table "flashcards", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "back"
+    t.bigint "category_id"
+    t.datetime "created_at", null: false
+    t.text "front"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["category_id"], name: "index_flashcards_on_category_id"
+    t.index ["user_id"], name: "index_flashcards_on_user_id"
+  end
+
+  create_table "messages", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.integer "receiver_id", null: false
+    t.integer "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["receiver_id"], name: "index_messages_on_receiver_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
   create_table "questions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "category_id"
     t.bigint "clinical_case_id"
@@ -111,6 +133,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
     t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_questions_on_category_id"
     t.index ["clinical_case_id"], name: "index_questions_on_clinical_case_id"
+  end
+
+  create_table "specialist_profiles", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "bio"
+    t.datetime "created_at", null: false
+    t.integer "enarm_score"
+    t.boolean "is_verified", default: false
+    t.string "specialty"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_specialist_profiles_on_user_id"
   end
 
   create_table "user_achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -166,6 +199,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
     t.index ["user_id"], name: "index_user_exams_on_user_id"
   end
 
+  create_table "user_flashcards", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.float "ease_factor", default: 2.5
+    t.bigint "flashcard_id", null: false
+    t.integer "interval", default: 0
+    t.datetime "next_review"
+    t.integer "repetitions", default: 0
+    t.string "status", default: "new"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["flashcard_id"], name: "index_user_flashcards_on_flashcard_id"
+    t.index ["user_id", "flashcard_id"], name: "index_user_flashcards_on_user_id_and_flashcard_id", unique: true
+    t.index ["user_id"], name: "index_user_flashcards_on_user_id"
+  end
+
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email"
@@ -191,8 +239,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
   add_foreign_key "exam_questions", "exams"
   add_foreign_key "exam_questions", "questions"
   add_foreign_key "exams", "categories"
+  add_foreign_key "flashcards", "categories"
+  add_foreign_key "flashcards", "users"
   add_foreign_key "questions", "categories"
   add_foreign_key "questions", "clinical_cases"
+  add_foreign_key "specialist_profiles", "users"
   add_foreign_key "user_achievements", "achievements"
   add_foreign_key "user_achievements", "users"
   add_foreign_key "user_answers", "answers"
@@ -203,4 +254,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_024451) do
   add_foreign_key "user_exam_answers", "user_exams"
   add_foreign_key "user_exams", "exams"
   add_foreign_key "user_exams", "users"
+  add_foreign_key "user_flashcards", "flashcards"
+  add_foreign_key "user_flashcards", "users"
 end

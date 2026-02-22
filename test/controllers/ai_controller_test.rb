@@ -2,7 +2,7 @@ require "test_helper"
 
 class AiControllerTest < ActionDispatch::IntegrationTest
   include AuthenticationHelpers
-  fixtures :users
+  fixtures :users, :categories
 
   setup do
     @auth_headers = admin_auth_headers(users(:admin))
@@ -35,8 +35,8 @@ class AiControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should bulk create exam from pdf" do
-    category = Category.create!(name: "Test Category")
-    fake_exam_data = {
+    category = categories(:one)
+    fake_parsed_data = {
       "exam_name" => "Mocked Exam",
       "clinical_cases" => [
         {
@@ -46,8 +46,8 @@ class AiControllerTest < ActionDispatch::IntegrationTest
             {
               "text" => "Q1",
               "answers" => [
-                { "text" => "A1" },
-                { "text" => "A2" }
+                { "text" => "A1", "is_correct" => false },
+                { "text" => "A2", "is_correct" => false }
               ]
             }
           ]
@@ -57,26 +57,25 @@ class AiControllerTest < ActionDispatch::IntegrationTest
         {
           "text" => "Q2",
           "answers" => [
-            { "text" => "A3" },
-            { "text" => "A4" }
+            { "text" => "A3", "is_correct" => false }
           ]
         }
       ]
     }
 
-    GenerativeAiService.stubs(:parse_exam_from_pdf).returns(fake_exam_data)
+    GenerativeAiService.stubs(:parse_pdf_to_exam).returns(fake_parsed_data)
 
-    # Creating dummy file content since we are mockinf the service anyway
-    pdf_content = "%PDF-1.0\n"
-    pdf_file = Rack::Test::UploadedFile.new(StringIO.new(pdf_content), "application/pdf", true, original_filename: "test.pdf")
+    file = fixture_file_upload("test/fixtures/files/test.pdf", "application/pdf")
 
     assert_difference "Exam.count", 1 do
       assert_difference "ClinicalCase.count", 1 do
         assert_difference "Question.count", 2 do
-          assert_difference "Answer.count", 4 do
-            post "/ai/bulk_create_exam",
-                 params: { file: pdf_file, category_id: category.id },
-                 headers: @auth_headers
+          assert_difference "Answer.count", 3 do
+            assert_difference "ExamQuestion.count", 2 do
+              post "/ai/bulk_create_exam",
+                params: { file: file, category_id: category.id },
+                headers: @auth_headers
+            end
           end
         end
       end
@@ -84,10 +83,7 @@ class AiControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     json_response = JSON.parse(@response.body)
-    assert_equal "Examen creado exitosamente", json_response["message"]
-
-    exam = Exam.find(json_response["exam_id"])
-    assert_equal "Mocked Exam", exam.name
-    assert_equal 2, exam.questions.count
+    assert_equal "Mocked Exam", json_response["name"]
+    assert_equal 2, json_response["exam_questions"].length
   end
 end

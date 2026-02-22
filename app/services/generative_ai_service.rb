@@ -1,4 +1,5 @@
 require "gemini-ai"
+require "base64"
 
 class GenerativeAiService
     def self.client(model: "gemini-1.5-flash")
@@ -25,27 +26,29 @@ class GenerativeAiService
         JSON.parse(response.content)
     end
 
-    def self.parse_exam_from_pdf(pdf_base64)
-        prompt = <<~PROMPT
-          Analyze the attached PDF and extract all clinical cases and standalone questions.
-          A clinical case is a description followed by one or more related questions.
-          A standalone question is a question not linked to a specific clinical case.
+    def self.parse_pdf_to_exam(file)
+        file_content = Base64.strict_encode64(file.read)
 
-          Return a JSON object with the following structure:
+        prompt = <<~PROMPT
+          Analiza el documento PDF adjunto y extrae la información para crear un examen médico.
+          El examen puede contener casos clínicos (que tienen un nombre, una descripción y una o más preguntas) y preguntas sueltas (que no pertenecen a ningún caso clínico).
+          Para cada pregunta, extrae las opciones de respuesta.
+          IMPORTANTE:
+          1. Todas las respuestas deben tener el campo 'is_correct' en false.
+          2. Si encuentras una imagen o figura en el documento, descríbela dentro del texto del caso clínico o de la pregunta usando el formato [IMAGEN: descripción detallada de la imagen].
+          3. Devuelve la información en formato JSON con la siguiente estructura:
           {
-            "exam_name": "Name of the exam or document",
+            "exam_name": "Nombre del examen",
             "clinical_cases": [
               {
-                "name": "Title or summary of the case",
-                "description": "Full description of the clinical case",
+                "name": "Nombre del caso clínico",
+                "description": "Descripción del caso clínico...",
                 "questions": [
                   {
-                    "text": "Question text",
+                    "text": "Texto de la pregunta...",
                     "answers": [
-                      {"text": "Answer choice 1"},
-                      {"text": "Answer choice 2"},
-                      {"text": "Answer choice 3"},
-                      {"text": "Answer choice 4"}
+                      { "text": "Opción A", "is_correct": false },
+                      ...
                     ]
                   }
                 ]
@@ -53,40 +56,38 @@ class GenerativeAiService
             ],
             "standalone_questions": [
               {
-                "text": "Question text",
+                "text": "Texto de la pregunta...",
                 "answers": [
-                   {"text": "Answer 1"},
-                   {"text": "Answer 2"},
-                   {"text": "Answer 3"},
-                   {"text": "Answer 4"}
+                  { "text": "Opción A", "is_correct": false },
+                  ...
                 ]
               }
             ]
           }
-          IMPORTANT: Return ONLY the JSON object.
         PROMPT
 
-        response = client.generate_content({
+        response = client.generate_content(
+          {
             contents: {
-                role: "user",
-                parts: [
-                    { inline_data: { mime_type: "application/pdf", data: pdf_base64 } },
-                    { text: prompt }
-                ]
+              role: "user",
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: "application/pdf",
+                    data: file_content
+                  }
+                }
+              ]
             }
-        })
+          }
+        )
 
-        # Extract JSON if it's wrapped in markdown blocks
-        content = response.content
-        if content =~ /```json\n?(.*?)\n?```/m
-            content = $1
-        end
-
-        begin
-          JSON.parse(content)
-        rescue JSON::ParserError
-          # Fallback if AI output is not clean JSON
-          { "error" => "Failed to parse AI response", "content" => content }
-        end
+        # Remove markdown code blocks if present
+        json_content = response.content.gsub(/```json\n?/, "").gsub(/```\n?/, "").strip
+        JSON.parse(json_content)
+    rescue => e
+        Rails.logger.error "Error parsing PDF with AI: #{e.message}"
+        raise e
     end
 end

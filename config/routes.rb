@@ -23,6 +23,18 @@ Rails.application.routes.draw do
   resources :exams
   resources :achievements, only: [ :index ]
 
+  resources :flashcards, only: [ :index, :show ] do
+    collection do
+      get "due"
+    end
+    member do
+      post "review"
+    end
+  end
+
+  resources :specialists, only: [ :index, :show ]
+  resources :messages, only: [ :index, :show, :create ]
+
   # Respuestas (unificadas)
   post "player_answers", to: "user_answers#create" # Mantenemos el nombre de la ruta para el frontend
   get "player_answers", to: "user_answers#index"
@@ -33,6 +45,8 @@ Rails.application.routes.draw do
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
   post "ai/bulk_create_exam", to: "ai#bulk_create_exam"
+
+  get "leaderboard", to: "leaderboard#index"
 
   get "up" => "rails/health#show", as: :rails_health_check
 end
