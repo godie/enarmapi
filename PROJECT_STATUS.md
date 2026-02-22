@@ -1,99 +1,66 @@
-# Project Status and Improvements
+# Project Status and Improvements - Enarm API
 
-This document outlines the current status of the Enarm API project and provides suggestions for potential improvements.
+This document provides an updated overview of the Enarm API project, its current state, architecture, and identified opportunities.
 
-## Current State
+## Current State (Updated February 2025)
 
 ### Project Overview
-
-The Enarm API is a backend service for a medical quiz and training platform. It provides a comprehensive set of features for managing users, players, medical content, and exams. The project is built with Ruby on Rails and leverages Docker for containerization, making it easy to set up and deploy.
+Enarm API is a specialized backend for medical training, focusing on the ENARM (Examen Nacional para Aspirantes a Residencias Médicas). It supports complex medical case management, AI-driven content generation, and gamified learning.
 
 ### Technology Stack
-
-*   **Backend:** Ruby on Rails 7.2
-*   **Database:** PostgreSQL
-*   **Web Server:** Puma
-*   **Authentication:** JWT (JSON Web Tokens)
-*   **Containerization:** Docker and Docker Compose
-*   **Testing:** Minitest, SimpleCov, Database Cleaner, WebMock, Mocha
+*   **Backend:** Ruby on Rails 8.1.2 (Latest stable)
+*   **Database:** MySQL 8.0 (Configured for `utf8mb4` for medical symbols and emojis)
+*   **Web Server:** Puma 6.6+ (Configured for 3 threads by default)
+*   **Authentication:** JWT (JSON Web Tokens) with support for Email/Password and Google Login.
+*   **AI Integration:** Gemini AI (Google) for question generation, clinical case creation, and bulk PDF parsing.
+*   **Containerization:** Docker & Docker Compose.
 
 ### Key Features
+*   **Medical Content Hierarchy:** Categories -> Clinical Cases -> Questions -> Answers.
+*   **Exam System:** Support for custom exams, time limits, passing scores, and attempt tracking.
+*   **AI Engine:**
+    *   Individual question/case generation via prompt.
+    *   Bulk exam creation from PDF files (using Gemini-1.5-Flash).
+*   **Gamification:** Achievement system and global Leaderboard based on performance.
+*   **User Statistics:** Detailed tracking of accuracy, total answers, and category-specific progress.
 
-*   **User and Player Management:** The API supports the creation, retrieval, updating, and deletion of users and players.
-*   **Authentication:** A JWT-based authentication system is in place to secure the API endpoints.
-*   **Medical Content Management:** The API provides full CRUD functionality for managing medical categories, clinical cases, and questions.
-*   **Exam Management:** The system allows for the creation and administration of exams, including the ability to add questions, set time limits, and define passing scores.
-*   **Player Progress Tracking:** The API tracks player answers and exam results, providing a mechanism for monitoring player performance.
-*   **Gamification:** The application includes an achievement system to engage and motivate players.
-*   **AI Integration:** The API has endpoints for generating questions and clinical cases using AI, which can significantly streamline content creation.
+### Database Schema (Active Tables)
+*   `users`: Handles both `player` and `admin` roles. Includes `preferences` (JSON) and social IDs.
+*   `categories`: Medical specialties.
+*   `clinical_cases`: Narrative-based medical scenarios.
+*   `questions` & `answers`: The core quiz components.
+*   `exams` & `exam_questions`: Structured assessments.
+*   `user_answers`: History of student performance in practice mode.
+*   `user_exams` & `user_exam_answers`: History and results of formal exam attempts.
+*   `achievements` & `user_achievements`: Gamification data.
 
-### API Endpoints
+---
 
-The API is well-structured and provides a rich set of endpoints for interacting with the various resources. The main endpoints are:
+## Technical Assessment
 
-*   `/users`
-*   `/players`
-*   `/auth_user`
-*   `/categories`
-*   `/clinical_cases`
-*   `/questions`
-*   `/player_answers`
-*   `/exams`
-*   `/achievements`
-*   `/players/:player_id/achievements`
-*   `/ai/generate_question`
-*   `/ai/generate_clinical_case`
+### Server Capacity
+*   **Current Setup:** 1 Puma worker with 3 threads.
+*   **Estimated Throughput:** On a standard T3.micro/small instance, this setup can handle approximately 40-60 requests per second (RPS) for standard API endpoints, depending on database I/O.
+*   **Scalability:** Horizontal scaling can be easily achieved via Docker/Kubernetes. Vertical scaling is possible by increasing `RAILS_MAX_THREADS` and `WEB_CONCURRENCY` (workers) in the environment.
 
-### Database Schema
+### Optimization Status
+*   **Database:** Foreign keys are indexed. Composite indices are used for performance-critical queries (e.g., `user_answers`). Charset is `utf8mb4`.
+*   **Code:**
+    *   Uses Omakase Ruby styling (RuboCop).
+    *   AI operations are abstracted into a service layer.
+    *   JWT for stateless authentication, reducing DB load for session management.
+*   **Identified Bottlenecks:** AI-powered endpoints are synchronous. High-volume PDF parsing can block Puma threads for several seconds.
 
-The database schema is well-designed and supports the application's features. The key tables include:
+### Optimization Recommendations
+1.  **Background Jobs:** Move AI PDF parsing and large-scale exam generation to a background worker (e.g., Sidekiq or Rails 8's Solid Queue).
+2.  **Caching:** Implement low-level caching for medical content that doesn't change frequently (categories, standardized clinical cases).
+3.  **Connection Pool:** Ensure `RAILS_MAX_THREADS` matches the database pool size in `database.yml` (currently both default to 5 in `database.yml` and 3 in `puma.rb`).
 
-*   `users`
-*   `players`
-*   `categories`
-*   `clinical_cases`
-*   `questions`
-*   `answers`
-*   `exams`
-*   `exam_questions`
-*   `player_answers`
-*   `player_exams`
-*   `achievements`
-*   `player_achievements`
+---
 
-## Potential Improvements
+## Planned Enhancements (Roadmap)
 
-### Code Quality
-
-*   **Continuous Integration for Code Style:** While RuboCop is included, integrating it into a CI pipeline would automatically enforce a consistent coding style across all contributions.
-*   **Automated Security Scanning:** Similarly, integrating Brakeman into the CI pipeline would help catch security vulnerabilities before they reach production.
-
-### API Documentation
-
-*   **Interactive API Documentation:** Consider implementing a tool like Swagger (OpenAPI) to generate interactive API documentation. This would make it easier for frontend developers and other API consumers to understand and test the endpoints.
-
-### Testing
-
-*   **Increase Test Coverage:** Use a tool like SimpleCov to measure test coverage and identify areas of the codebase that are not well-tested. Aim for a high level of coverage to ensure the application's reliability.
-*   **End-to-End Integration Tests:** While the project has unit tests, adding a suite of integration tests would be beneficial for testing the full functionality of the API endpoints, from the request to the database and back.
-
-### Gamification
-
-*   **Leaderboards:** Introduce leaderboards to foster a sense of competition among players. This could be based on points, exam scores, or the number of achievements earned.
-*   **Advanced Achievements:** Expand the achievement system with more complex and engaging achievements, such as daily challenges, streaks, or achievements for mastering a specific category.
-
-### AI Integration
-
-*   **Refine AI-Generated Content:** Experiment with different AI models and more sophisticated prompts to improve the quality and accuracy of the generated questions and clinical cases.
-*   **AI-Powered Answer Evaluation:** For open-ended questions, an AI-powered system could be used to evaluate player answers and provide feedback.
-
-### Deployment
-
-*   **Continuous Integration/Continuous Deployment (CI/CD):** Set up a CI/CD pipeline using a platform like GitHub Actions or GitLab CI to automate the testing and deployment process. This would streamline the release process and improve the overall stability of the application.
-*   **Logging and Monitoring:** Implement a robust logging and monitoring solution (e.g., Sentry, New Relic, or the ELK stack) to track application performance, identify errors, and gain insights into user behavior.
-
-### New Features
-
-*   **Social Features:** Allow players to connect with each other, challenge friends to exams, and share their achievements.
-*   **Study Mode:** Create a "study mode" where players can review questions they answered incorrectly and get detailed explanations.
-*   **Subscription Model:** Introduce a subscription model for access to premium content, advanced features, or detailed performance analytics.
+1.  **Flashcards Module:** Spaced repetition system for high-yield medical facts.
+2.  **Specialist Network:** Connecting students with doctors who have already passed the ENARM for mentoring and advice.
+3.  **Monetization Foundation:** Infrastructure to allow specialists to offer consulting services (starting with direct messaging).
+4.  **Performance Improvements:** Implementation of background jobs for heavy AI tasks.

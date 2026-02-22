@@ -28,6 +28,18 @@ Rails.application.routes.draw do
   resources :user_exams, only: [ :index, :show, :create, :update ]
   resources :achievements, only: [ :index, :create, :update, :destroy ]
 
+  resources :flashcards, only: [ :index, :show ] do
+    collection do
+      get "due"
+    end
+    member do
+      post "review"
+    end
+  end
+
+  resources :specialists, only: [ :index, :show ]
+  resources :messages, only: [ :index, :show, :create ]
+
   # Respuestas (unificadas)
   post "player_answers", to: "user_answers#create" # Mantenemos el nombre de la ruta para el frontend
   get "player_answers", to: "user_answers#index"
