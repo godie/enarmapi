@@ -1,0 +1,13 @@
+# Pre-commit: ejecuta los mismos pasos que el CI antes de cada commit.
+# Instalación: pre-commit install
+# Ejecutar manualmente: pre-commit run --all-files
+# Ver https://pre-commit.com
+
+repos:
+  - repo: local
+    hooks:
+      - id: run-ci
+        name: Run CI (brakeman, rubocop, tests)
+        entry: bin/run-ci
+        language: system
+        pass_filenames: false

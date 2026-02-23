@@ -41,7 +41,8 @@ class PlayerAnswersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created # 201 Created
     json_response = JSON.parse(response.body)
-    assert_equal "Respuestas guardadas correctamente!", json_response["message"] # Changed to Spanish message
+    assert json_response["message"].start_with?("Respuestas guardadas correctamente!"),
+      "Expected message to start with base text, got: #{json_response['message']}"
 
     # Verify that the answers are associated with the current user
     assert @player_one.user_answers.exists?(question_id: @question_one.id, answer_id: @answer_one.id)

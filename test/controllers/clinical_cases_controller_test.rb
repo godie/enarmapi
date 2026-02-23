@@ -71,6 +71,14 @@ class ClinicalCasesControllerTest < ActionDispatch::IntegrationTest
     assert_not_empty response_json["clinical_cases"], "Response should contain clinical cases"
   end
 
+  test "should get clinical_cases for category via nested route" do
+    get category_clinical_cases_url(@category), headers: @auth_headers, as: :json
+    assert_response :success
+    response_json = JSON.parse(response.body)
+    assert response_json.key?("clinical_cases")
+    assert_kind_of Array, response_json["clinical_cases"]
+  end
+
   test "should create clinical_case with nested attributes when authenticated" do
     assert_difference("ClinicalCase.count", 1) do
       assert_difference("Question.count", @valid_clinical_case_attrs[:questions_attributes].size) do

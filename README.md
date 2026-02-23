@@ -51,7 +51,32 @@ Tests should be run against the test database.
 docker-compose run --rm app bundle exec rails test
 ```
 
-## 5. API Documentation
+## 5. Pre-commit (ejecutar el CI antes de cada commit)
+
+El repo incluye configuración para ejecutar los mismos pasos que el CI (Brakeman, RuboCop y tests) antes de cada commit.
+
+**Opción A – Hook nativo de Git (recomendado, sin dependencias extra):**
+
+```bash
+git config core.hooksPath .githooks
+```
+
+A partir de ahí, cada `git commit` ejecutará `bin/run-ci`. Si no tienes MySQL para tests, puedes omitirlos: `SKIP_TESTS=1 git commit ...` o usar `git commit --no-verify` para saltarte el hook puntualmente.
+
+**Opción B – Framework pre-commit (Python):**
+
+```bash
+pip install pre-commit   # o: brew install pre-commit
+pre-commit install
+```
+
+Ejecutar manualmente el mismo pipeline (sin commit):
+
+```bash
+bin/run-ci
+```
+
+## 6. API Documentation
 
 This document outlines the available API endpoints for the Enarm API application.
 
@@ -119,7 +144,10 @@ This document outlines the available API endpoints for the Enarm API application
 ### Clinical Cases
 
 *   **GET /clinical_cases**
-    *   **Description:** Retrieves a list of clinical cases.
+    *   **Description:** Retrieves a list of clinical cases. Optional query: `category_id` to filter by category.
+*   **GET /categories/:category_id/clinical_cases**
+    *   **Description:** Retrieves clinical cases for a specific category (same response as `GET /clinical_cases?category_id=:category_id`).
+    *   **Authentication:** Required (player or admin).
 *   **POST /clinical_cases**
     *   **Description:** Creates a new clinical case.
     *   **Authentication:** Admin.
@@ -194,6 +222,44 @@ This document outlines the available API endpoints for the Enarm API application
 *   **GET /users/:user_id/achievements** (Alias: `/players/:player_id/achievements`)
     *   **Description:** Retrieves achievements earned by a specific user.
     *   **Authentication:** Owner or Admin.
+
+### Flashcards
+
+*   **GET /flashcards**
+    *   **Description:** Retrieves a list of flashcards. Optional query: `category_id` to filter by category.
+    *   **Authentication:** Required.
+*   **GET /flashcards/due**
+    *   **Description:** Retrieves flashcards due for review for the authenticated user (spaced repetition).
+    *   **Authentication:** Required.
+*   **GET /flashcards/:id**
+    *   **Description:** Retrieves a specific flashcard.
+    *   **Authentication:** Required.
+*   **POST /flashcards/:id/review**
+    *   **Description:** Submits a review for a flashcard (quality rating). Updates the card’s schedule for next review.
+    *   **Parameters:** `quality` (integer, typically 0–5 for spaced repetition).
+    *   **Authentication:** Required.
+
+### Specialists
+
+*   **GET /specialists**
+    *   **Description:** Retrieves the list of verified specialists (users with a verified specialist profile).
+    *   **Authentication:** Required.
+*   **GET /specialists/:id**
+    *   **Description:** Retrieves a specific specialist and their profile (bio, specialty, enarm_score, etc.).
+    *   **Authentication:** Required.
+
+### Messages
+
+*   **GET /messages**
+    *   **Description:** Retrieves the list of users with whom the authenticated user has conversations (sent or received messages).
+    *   **Authentication:** Required.
+*   **GET /messages/:id**
+    *   **Description:** Retrieves the message history between the authenticated user and the user with the given id. Marks messages as read for the current user.
+    *   **Authentication:** Required.
+*   **POST /messages**
+    *   **Description:** Sends a new message to another user.
+    *   **Parameters:** `message[receiver_id]`, `message[content]`.
+    *   **Authentication:** Required.
 
 ### AI Integration
 
