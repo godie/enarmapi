@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Hook que ejecuta el mismo pipeline que el CI antes de cada commit.
+# Para activar: git config core.hooksPath .githooks
+
+exec bin/run-ci

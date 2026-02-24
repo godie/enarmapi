@@ -2,14 +2,17 @@ require "gemini-ai"
 require "base64"
 
 class GenerativeAiService
-    def self.generate_question(prompt)
-        client = Gemini.new(
+    def self.client(model: "gemini-1.5-flash")
+        Gemini.new(
             credentials: {
                 service: "generative-language-api",
                 api_key: ENV["GOOGLE_API_KEY"]
             },
-            options: { model: "gemini-pro", server_sent_events: true }
+            options: { model: model, server_sent_events: true }
         )
+    end
+
+    def self.generate_question(prompt)
         response = client.generate_content(
             { contents: { role: "user", parts: { text: "Generate a multiple choice question with 4 answers based on the following prompt: #{prompt}. The response should be a JSON object with the following structure: {\"question\": \"...\", \"answers\": [{\"text\": \"...\", \"is_correct\": boolean}, ...]}" } } }
         )
@@ -17,13 +20,6 @@ class GenerativeAiService
     end
 
     def self.generate_clinical_case(prompt)
-        client = Gemini.new(
-            credentials: {
-                service: "generative-language-api",
-                api_key: ENV["GOOGLE_API_KEY"]
-            },
-            options: { model: "gemini-pro", server_sent_events: true }
-        )
         response = client.generate_content(
             { contents: { role: "user", parts: { text: "Generate a clinical case with a name, a description, and 3 multiple choice questions with 4 answers each based on the following prompt: #{prompt}. The response should be a JSON object with the following structure: {\"name\": \"...\", \"description\": \"...\", \"questions\": [{\"text\": \"...\", \"answers\": [{\"text\": \"...\", \"is_correct\": boolean}, ...]}, ...]}" } } }
         )
@@ -31,14 +27,6 @@ class GenerativeAiService
     end
 
     def self.parse_pdf_to_exam(file)
-        client = Gemini.new(
-            credentials: {
-                service: "generative-language-api",
-                api_key: ENV["GOOGLE_API_KEY"]
-            },
-            options: { model: "gemini-1.5-flash", server_sent_events: true }
-        )
-
         file_content = Base64.strict_encode64(file.read)
 
         prompt = <<~PROMPT

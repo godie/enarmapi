@@ -25,8 +25,8 @@ Rails.application.routes.draw do
   resources :clinical_cases
   resources :questions
   resources :exams
-  resources :user_exams, only: [ :index, :show, :create, :update ]
   resources :achievements, only: [ :index, :create, :update, :destroy ]
+  resources :user_exams, only: [ :index, :show, :create, :update ]
 
   resources :flashcards, only: [ :index, :show ] do
     collection do

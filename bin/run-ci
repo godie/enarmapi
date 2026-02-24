@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Ejecuta los mismos pasos que el CI (brakeman, rubocop, tests).
+# Uso: bin/run-ci
+# Para omitir tests (ej. sin MySQL): SKIP_TESTS=1 bin/run-ci
+
+set -e
+
+echo "==> Brakeman (análisis de seguridad)..."
+bin/brakeman --no-pager --except EOLRuby
+
+echo ""
+echo "==> RuboCop (estilo)..."
+bin/rubocop -f github
+
+if [ "${SKIP_TESTS}" != "1" ]; then
+  echo ""
+  echo "==> Tests..."
+  bin/rails test
+else
+  echo ""
+  echo "==> Tests omitidos (SKIP_TESTS=1)"
+fi
+
+echo ""
+echo "==> CI completado correctamente"
