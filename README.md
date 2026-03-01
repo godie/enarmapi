@@ -80,6 +80,10 @@ bin/run-ci
 
 This document outlines the available API endpoints for the Enarm API application.
 
+Detailed reference (headers, status codes, examples per endpoint):
+
+- `docs/API_REFERENCE.md`
+
 ### Health Check
 
 *   **GET /up**

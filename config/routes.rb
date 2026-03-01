@@ -4,6 +4,7 @@ Rails.application.routes.draw do
     collection do
       post "login"
       post "google_login"
+      post "facebook_login"
       get "me/stats", to: "users#stats"
       get "me/contributions", to: "users#contributions"
     end
@@ -15,6 +16,7 @@ Rails.application.routes.draw do
     collection do
       post "login", to: "users#login"
       post "google_login", to: "users#google_login"
+      post "facebook_login", to: "users#facebook_login"
     end
     resources :achievements, only: [ :index ], controller: "users/achievements"
   end
@@ -28,14 +30,9 @@ Rails.application.routes.draw do
   resources :achievements, only: [ :index, :create, :update, :destroy ]
   resources :user_exams, only: [ :index, :show, :create, :update ]
 
-  resources :flashcards, only: [ :index, :show ] do
-    collection do
-      get "due"
-    end
-    member do
-      post "review"
-    end
-  end
+  get "flashcards/due", to: "flashcards#due"
+  post "flashcards/:id/review", to: "flashcards#review"
+  resources :flashcards, only: [ :index, :show ]
 
   resources :specialists, only: [ :index, :show ]
   resources :messages, only: [ :index, :show, :create ]

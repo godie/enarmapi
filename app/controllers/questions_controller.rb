@@ -23,9 +23,10 @@ class QuestionsController < ApplicationController
       end
     else
       # Consider pagination for listing all questions
-      @questions = Question.all
+      @questions = Question.all.order(id: :desc)
     end
-    render json: @questions, include: [ :answers, :category, :clinical_case ]
+    @questions = @questions.paginate(page: params[:page]).includes(:answers, :category, :clinical_case)
+    render json: { current_page: @questions.current_page, per_page: @questions.per_page, total_entries: @questions.total_entries, questions: @questions }, include: [ :answers, :category, :clinical_case ]
   end
 
   # GET /questions/:id

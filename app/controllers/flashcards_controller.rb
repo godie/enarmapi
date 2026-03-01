@@ -9,6 +9,11 @@ class FlashcardsController < ApplicationController
     render json: @flashcards
   end
 
+  # GET /flashcards/:id
+  def show
+    render json: @flashcard
+  end
+
   # GET /flashcards/due
   def due
     @due_cards = @current_user.user_flashcards.due.includes(:flashcard)

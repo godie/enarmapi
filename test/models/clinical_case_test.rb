@@ -120,4 +120,39 @@ class ClinicalCaseTest < ActiveSupport::TestCase
     # If Kaminari is used (`paginates_per`), this test would need adjustment.
     assert_equal 10, ClinicalCase.per_page
   end
+
+  test "image should be invalid when content type is not png or jpg" do
+    clinical_case = ClinicalCase.new(name: "Case with invalid image type", category: @category)
+    clinical_case.image.attach(
+      io: StringIO.new("fake-image-content"),
+      filename: "case.gif",
+      content_type: "image/gif"
+    )
+
+    assert_not clinical_case.valid?
+    assert_includes clinical_case.errors[:image], "debe ser PNG o JPG"
+  end
+
+  test "image should be invalid when larger than 5 MB" do
+    clinical_case = ClinicalCase.new(name: "Case with large image", category: @category)
+    clinical_case.image.attach(
+      io: StringIO.new("a" * (5.megabytes + 1)),
+      filename: "large.jpg",
+      content_type: "image/jpeg"
+    )
+
+    assert_not clinical_case.valid?
+    assert_includes clinical_case.errors[:image], "no debe superar 5 MB"
+  end
+
+  test "image should be valid when jpg and up to 5 MB" do
+    clinical_case = ClinicalCase.new(name: "Case with valid image", category: @category)
+    clinical_case.image.attach(
+      io: StringIO.new("a" * 1024),
+      filename: "valid.jpg",
+      content_type: "image/jpeg"
+    )
+
+    assert clinical_case.valid?, clinical_case.errors.full_messages.join(", ")
+  end
 end
