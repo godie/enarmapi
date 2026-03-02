@@ -113,6 +113,34 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_email, user_to_update.email # Ensure email was not changed
   end
 
+  test "should login existing user with facebook and link facebook_id" do
+    user = User.create!(username: "fbuser", email: "fbuser@example.com", password: "password123")
+
+    post facebook_login_users_url,
+         params: { facebook_id: "fb_123", email: user.email, name: "FB User" },
+         as: :json
+
+    assert_response :ok
+    response_json = JSON.parse(response.body)
+    assert_equal user.email, response_json["email"]
+    assert response_json["token"].present?
+    assert_equal "fb_123", user.reload.facebook_id
+  end
+
+  test "should create user with facebook login when user does not exist" do
+    assert_difference("User.count", 1) do
+      post facebook_login_users_url,
+           params: { facebook_id: "fb_new_1", email: "newfb@example.com", name: "Nuevo FB" },
+           as: :json
+    end
+
+    assert_response :created
+    response_json = JSON.parse(response.body)
+    assert_equal "newfb@example.com", response_json["email"]
+    assert response_json["token"].present?
+    assert_equal "fb_new_1", User.find_by(email: "newfb@example.com")&.facebook_id
+  end
+
   test "GET me/contributions returns current user contributions when authenticated" do
     get me_contributions_users_url, headers: @auth_headers, as: :json
     assert_response :success

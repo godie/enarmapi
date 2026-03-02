@@ -92,8 +92,9 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     get questions_url, headers: @auth_headers, as: :json
     assert_response :success
     response_json = JSON.parse(response.body)
-    assert_not_empty response_json
-    response_ids = response_json.map { |q| q["id"] }
+    questions = response_json["questions"]
+    assert_not_empty questions
+    response_ids = questions.map { |q| q["id"] }
     assert_includes response_ids, @existing_question_in_cc.id
     assert_includes response_ids, @standalone_question.id
   end
@@ -102,11 +103,12 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     get questions_url(clinical_case_id: @clinical_case_one.id), headers: @auth_headers, as: :json
     assert_response :success
     response_json = JSON.parse(response.body)
-    assert_not_empty response_json, "Response for clinical_case_id filter shouldn't be empty"
-    response_json.each do |question|
+    questions = response_json["questions"]
+    assert_not_empty questions, "Response for clinical_case_id filter shouldn't be empty"
+    questions.each do |question|
       assert_equal @clinical_case_one.id, question["clinical_case_id"]
     end
-    assert_equal @clinical_case_one.questions.count, response_json.size
+    assert_equal @clinical_case_one.questions.count, response_json["total_entries"]
   end
 
   test "should get index of questions filtered by category_id (includes CC and standalone)" do
@@ -116,14 +118,15 @@ class QuestionsControllerTest < ActionDispatch::IntegrationTest
     get questions_url(category_id: @category_one.id), headers: @auth_headers, as: :json
     assert_response :success
     response_json = JSON.parse(response.body)
+    questions = response_json["questions"]
 
-    question_ids_in_response = response_json.map { |q| q["id"] }
+    question_ids_in_response = questions.map { |q| q["id"] }
 
     assert_includes question_ids_in_response, cc_question_in_cat_one.id
     assert_includes question_ids_in_response, sa_q_in_cat_one.id
     assert_not_includes question_ids_in_response, @standalone_question.id # This one is in category_two
 
-    assert_equal Question.by_category(@category_one.id).count, response_json.size
+    assert_equal Question.by_category(@category_one.id).count, response_json["total_entries"]
   end
 
 

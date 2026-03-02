@@ -74,24 +74,12 @@ class UsersController < ApplicationController
 
   # POST /google_login
   def google_login
-    google_id = params[:google_id]
-    email = params[:email]
-    name = params[:name]
+    social_login(provider: :google, provider_id_key: :google_id)
+  end
 
-    user = User.find_by(google_id: google_id) || User.find_by(email: email)
-
-    if user
-      user.update(google_id: google_id) if user.google_id.blank?
-      render json: user_json(user), status: :ok
-    else
-      user = User.new(email: email, name: name, google_id: google_id, role: :player)
-      user.password = SecureRandom.hex(10)
-      if user.save
-        render json: user_json(user), status: :created
-      else
-        render json: user.errors, status: :unprocessable_entity
-      end
-    end
+  # POST /facebook_login
+  def facebook_login
+    social_login(provider: :facebook, provider_id_key: :facebook_id)
   end
 
   private
@@ -119,5 +107,33 @@ class UsersController < ApplicationController
       preferences: user.preferences,
       token: token
     }
+  end
+
+  def social_login(provider:, provider_id_key:)
+    provider_id = params[provider_id_key]
+    email = params[:email]
+    name = params[:name]
+
+    user = User.find_by(provider_id_key => provider_id) || User.find_by(email: email)
+
+    if user
+      user.update(provider_id_key => provider_id) if user[provider_id_key].blank? && provider_id.present?
+      render json: user_json(user), status: :ok
+    else
+      user_attributes = {
+        email: email,
+        name: name,
+        role: :player,
+        provider_id_key => provider_id
+      }
+      user = User.new(user_attributes)
+      user.password = SecureRandom.hex(10)
+
+      if user.save
+        render json: user_json(user), status: :created
+      else
+        render json: user.errors, status: :unprocessable_entity
+      end
+    end
   end
 end

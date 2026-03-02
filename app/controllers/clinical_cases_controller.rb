@@ -10,6 +10,10 @@ class ClinicalCasesController < ApplicationController
     if params[:category_id]
       @cases = @cases.where(category_id: params[:category_id])
     end
+    if params[:q].present?
+      query = "%#{params[:q].to_s.strip.downcase}%"
+      @cases = @cases.where("LOWER(name) LIKE ?", query)
+    end
     render json: { current_page: @cases.current_page, per_page: @cases.per_page, total_entries: @cases.total_entries, clinical_cases: @cases }
   end
 
@@ -57,6 +61,7 @@ class ClinicalCasesController < ApplicationController
       :description,
       :category_id,
       :status,
+      :image,
       questions_attributes: [
         :id,
         :_destroy,
