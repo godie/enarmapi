@@ -47,7 +47,9 @@ class User < ApplicationRecord
   end
 
   def total_points
-    achievements.sum(:points) || 0
+    achievement_points = achievements.sum(:points) || 0
+    correct_answer_points = user_answers.correct.count
+    achievement_points + correct_answer_points
   end
 
   def answered?(question)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
   create_table "achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "criteria"
@@ -59,6 +59,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
     t.index ["question_id"], name: "index_answers_on_question_id"
   end
 
+  create_table "articles", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.string "title"
+    t.bigint "topic_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["topic_id"], name: "index_articles_on_topic_id"
+  end
+
   create_table "categories", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
@@ -72,6 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
     t.text "description"
     t.string "name"
     t.integer "status", default: 0
+    t.string "tags"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["category_id"], name: "index_clinical_cases_on_category_id"
@@ -144,6 +154,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_specialist_profiles_on_user_id"
+  end
+
+  create_table "topics", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
   end
 
   create_table "user_achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -234,6 +250,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_040006) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "answers", "questions"
+  add_foreign_key "articles", "topics"
   add_foreign_key "clinical_cases", "categories"
   add_foreign_key "clinical_cases", "users"
   add_foreign_key "exam_questions", "exams"
