@@ -3,7 +3,7 @@ class V2ErrorsController < ApplicationController
 
   def summary
     # Preguntas fallidas del usuario
-    failed_answers = Current.user.user_answers.incorrect.includes(question: [:answers, { clinical_case: :category }]).recent
+    failed_answers = Current.user.user_answers.incorrect.includes(question: [ :answers, { clinical_case: :category } ]).recent
 
     # Agrupar por especialidad (categoría) para el resumen
     specialties_count = failed_answers.each_with_object(Hash.new(0)) do |ua, hash|
