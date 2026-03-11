@@ -13,6 +13,10 @@ class ClinicalCase < ApplicationRecord
   validates :name, presence: true
   validate :image_must_be_valid
 
+  def tag_list
+    tags&.split(",")&.map(&:strip) || []
+  end
+
   private
 
   def image_must_be_valid
