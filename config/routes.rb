@@ -1,9 +1,11 @@
 Rails.application.routes.draw do
   # V2 Endpoints
   get "v2/leaderboard/national", to: "v2_leaderboard#national"
+  get "v2/coupons/me", to: "v2_coupons#me"
   get "v2/images/bank", to: "v2_images#bank"
   get "v2/flashcards/review", to: "v2_flashcards#review"
   post "v2/flashcards/review/:id/answer", to: "v2_flashcards#answer"
+  post "v2/flashcards", to: "v2_flashcards#create"
   get "v2/knowledge-base", to: "v2_knowledge_base#index"
   get "v2/errors/summary", to: "v2_errors#summary"
 
@@ -55,6 +57,7 @@ Rails.application.routes.draw do
   post "ai/generate_question", to: "ai#generate_question"
   post "ai/generate_clinical_case", to: "ai#generate_clinical_case"
   post "ai/bulk_create_exam", to: "ai#bulk_create_exam"
+  post "v2/ai/generate-flashcards", to: "v2_ai#generate_flashcards"
 
   get "leaderboard", to: "leaderboard#index"
 

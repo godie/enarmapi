@@ -26,6 +26,19 @@ class GenerativeAiService
         JSON.parse(response.content)
     end
 
+    def self.generate_flashcards(topic, count, difficulty)
+        prompt = "Genera #{count} flashcards de medicina sobre el tema '#{topic}' con dificultad #{difficulty}. " \
+                 "Cada flashcard debe tener un 'front' (pregunta o concepto) y un 'back' (respuesta corta o explicación). " \
+                 "Devuelve un array JSON de objetos con las llaves 'front' y 'back'."
+
+        response = client.generate_content(
+            { contents: { role: "user", parts: { text: prompt } } }
+        )
+
+        json_content = response.content.gsub(/```json\n?/, "").gsub(/```\n?/, "").strip
+        JSON.parse(json_content)
+    end
+
     def self.parse_pdf_to_exam(file)
         file_content = Base64.strict_encode64(file.read)
 
