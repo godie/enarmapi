@@ -1,6 +1,7 @@
 require "test_helper"
 
 class V2FlashcardsControllerTest < ActionDispatch::IntegrationTest
+  fixtures :users, :categories
   setup do
     @user = users(:player_one)
     @category = categories(:one)

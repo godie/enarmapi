@@ -1,6 +1,7 @@
 require "test_helper"
 
 class V2CouponsControllerTest < ActionDispatch::IntegrationTest
+  fixtures :users
   setup do
     @user = users(:player_one)
     @coupon1 = Coupon.create!(code: "DESC10", coupon_type: "percentage", expiration_date: 1.day.from_now, description: "10% off")

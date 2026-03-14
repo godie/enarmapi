@@ -62,7 +62,7 @@ module ActiveSupport
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     # Descomenta si necesitas cargar fixtures automáticamente:
-    fixtures :all
+    # fixtures :all
 
     # Add more helper methods to be used by all tests here...
   end

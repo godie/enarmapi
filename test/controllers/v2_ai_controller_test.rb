@@ -1,6 +1,7 @@
 require "test_helper"
 
 class V2AiControllerTest < ActionDispatch::IntegrationTest
+  fixtures :users
   setup do
     @admin = users(:admin)
     @user = users(:player_one)
