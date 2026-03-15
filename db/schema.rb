@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_13_222726) do
   create_table "achievements", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "criteria"
@@ -89,6 +89,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
     t.index ["user_id"], name: "index_clinical_cases_on_user_id"
   end
 
+  create_table "coupons", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.string "code"
+    t.string "coupon_type"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "expiration_date"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "exam_questions", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "exam_id", null: false
@@ -118,6 +127,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
     t.bigint "category_id"
     t.datetime "created_at", null: false
     t.text "front"
+    t.string "status"
+    t.string "tags"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["category_id"], name: "index_flashcards_on_category_id"
@@ -186,6 +197,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
     t.index ["question_id"], name: "index_user_answers_on_question_id"
     t.index ["user_id", "question_id", "created_at"], name: "index_user_answers_on_user_id_and_question_id_and_created_at"
     t.index ["user_id"], name: "index_user_answers_on_user_id"
+  end
+
+  create_table "user_coupons", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "coupon_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "used_at"
+    t.bigint "user_id", null: false
+    t.index ["coupon_id"], name: "index_user_coupons_on_coupon_id"
+    t.index ["user_id"], name: "index_user_coupons_on_user_id"
   end
 
   create_table "user_exam_answers", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -266,6 +287,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_120345) do
   add_foreign_key "user_answers", "answers"
   add_foreign_key "user_answers", "questions"
   add_foreign_key "user_answers", "users"
+  add_foreign_key "user_coupons", "coupons"
+  add_foreign_key "user_coupons", "users"
   add_foreign_key "user_exam_answers", "answers"
   add_foreign_key "user_exam_answers", "exam_questions"
   add_foreign_key "user_exam_answers", "user_exams"

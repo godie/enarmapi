@@ -1,12 +1,23 @@
 class V2FlashcardsController < ApplicationController
   before_action :authenticate_user!
 
+  def create
+    flashcard = Flashcard.new(flashcard_params)
+    flashcard.user = Current.user
+    flashcard.status = "published" # Assuming user created ones are published immediately
+
+    if flashcard.save
+      # Automatically add to user's cards
+      Current.user.user_flashcards.create!(flashcard: flashcard)
+      render json: flashcard, status: :created
+    else
+      render json: { errors: flashcard.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def review
     # Obtener flashcards pendientes de repaso para el usuario actual
     user_flashcards = Current.user.user_flashcards.due.limit(20)
-
-    # Si no hay pendientes, podríamos sugerir algunas nuevas o simplemente enviar vacío
-    # El requisito dice que el backend decide según SRS
 
     render json: {
       flashcards: user_flashcards.map { |uf|
@@ -29,5 +40,18 @@ class V2FlashcardsController < ApplicationController
     else
       render json: { error: "Flashcard no encontrada para este usuario" }, status: :not_found
     end
+  end
+
+  private
+
+  def flashcard_params
+    # Mapear specialtyId a category_id
+    p = params.permit(:front, :back, :specialtyId, :tags)
+    {
+      front: p[:front],
+      back: p[:back],
+      category_id: p[:specialtyId],
+      tags: p[:tags]
+    }
   end
 end

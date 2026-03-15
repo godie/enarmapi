@@ -21,6 +21,8 @@ class User < ApplicationRecord
 
   has_many :user_flashcards, dependent: :destroy
   has_many :flashcards, through: :user_flashcards
+  has_many :user_coupons, dependent: :destroy
+  has_many :coupons, through: :user_coupons
 
   # Validaciones
   validates :email, presence: true, uniqueness: { case_sensitive: false }, format: { with: VALID_EMAIL_REGEX }

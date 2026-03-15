@@ -6,4 +6,12 @@ class Flashcard < ApplicationRecord
   has_many :users, through: :user_flashcards
 
   validates :front, :back, presence: true
+
+  # status: pending, published, deleted, waiting_approval, not_approved
+  STATUSES = %w[pending published deleted waiting_approval not_approved].freeze
+  validates :status, inclusion: { in: STATUSES }, allow_nil: true
+
+  def tag_list
+    tags&.split(",")&.map(&:strip) || []
+  end
 end
